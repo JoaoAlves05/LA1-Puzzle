@@ -1,18 +1,18 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g
-BUILD_DIR = build
+CFLAGS = -Wall -Wextra -pedantic -O1 -fno-omit-frame-pointer -g
+BUILD_DIR = objetos
 
 SRCS = main.c tabuleiro.c historico.c verificacoes.c
 OBJS = $(SRCS:%.c=$(BUILD_DIR)/%.o)
-TARGET = puzzle
+TARGET = jogo
 
-all: $(TARGET)
+jogo: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
 $(BUILD_DIR)/%.o: %.c
-	@mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
