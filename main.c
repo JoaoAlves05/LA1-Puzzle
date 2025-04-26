@@ -33,14 +33,16 @@ int main() {
 
     // Loop principal do jogo
     char comando[10];
+    char coordenadas[5];
     int linha, coluna;
+
     while (1) {
         printf("\nTabuleiro atual:\n");
         exibirTabuleiro(linhas, colunas);
 
         printf("\nComandos disponiveis:\n");
-        printf("b <linha> <coluna> - Pintar de branco\n");
-        printf("r <linha> <coluna> - Riscar casa\n");
+        printf("b <linha><coluna> - Pintar de branco\n");
+        printf("r <linha><coluna> - Riscar casa\n");
         printf("g <arquivo> - Gravar jogo\n");
         printf("l <arquivo> - Carregar jogo\n");
         printf("d - Desfazer Comando\n");
@@ -50,23 +52,20 @@ int main() {
         printf("Digite um comando: ");
         scanf("%s", comando);
 
-        if (strncmp(comando, "b", 1) == 0) {
-            if (scanf("%d %d", &linha, &coluna) != 2 || linha < 1 || linha > linhas || coluna < 1 || coluna > colunas) {
-                printf("Coordenadas invalidas!\n");
-                while (getchar() != '\n');
+        if (strcmp(comando, "b") == 0 || strcmp(comando, "r") == 0) {
+            scanf("%4s", coordenadas);
+            if (!parseCoordenada(coordenadas, &linha, &coluna, linhas, colunas)) {
+                printf("Coordenada inválida! Usa o formato <letra><número>\n");
                 continue;
             }
-            empilhar(&historico, linhas, colunas);
-            pintarDeBranco(linha - 1, coluna - 1);
 
-        } else if (strncmp(comando, "r", 1) == 0) {
-            if (scanf("%d %d", &linha, &coluna) != 2 || linha < 1 || linha > linhas || coluna < 1 || coluna > colunas) {
-                printf("Coordenadas invalidas!\n");
-                while (getchar() != '\n');
-                continue;
+            empilhar(&historico, linhas, colunas);  // Guarda o estado atual
+
+            if (strcmp(comando, "b") == 0) {
+                pintarDeBranco(linha, coluna);
+            } else {
+                riscarCasa(linha, coluna);
             }
-            empilhar(&historico, linhas, colunas);
-            riscarCasa(linha - 1, coluna - 1);
 
         } else if (strncmp(comando, "g", 1) == 0) {
             char nomeArquivo[50];
