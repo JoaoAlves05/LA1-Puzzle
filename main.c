@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "tabuleiro.h"
 #include "historico.h"
 #include "verificacoes.h"
 
 int main() {
     int linhas, colunas;
-    char tabuleiro[MAX_SIZE][MAX_SIZE];
     PilhaEstados historico;
+    Celula tabuleiro[MAX_SIZE][MAX_SIZE];
 
     inicializarPilha(&historico);
 
@@ -23,7 +24,10 @@ int main() {
     printf("Digite o tabuleiro inicial (%d linhas de %d caracteres):\n", linhas, colunas);
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            scanf(" %c", &tabuleiro[i][j]);
+            char c;
+            scanf(" %c", &c);
+            tabuleiro[i][j].original = tolower(c);  // Armazena o valor original
+            tabuleiro[i][j].atual = tolower(c);     // Armazena o valor atual(= ao original no inicio)
         }
     }
 
@@ -32,7 +36,7 @@ int main() {
     int linha, coluna;
     while (1) {
         printf("\nTabuleiro atual:\n");
-        exibirTabuleiro(tabuleiro, linhas, colunas);
+        exibirTabuleiro(linhas, colunas);
 
         printf("\nComandos disponiveis:\n");
         printf("b <linha> <coluna> - Pintar de branco\n");
@@ -41,6 +45,7 @@ int main() {
         printf("l <arquivo> - Carregar jogo\n");
         printf("d - Desfazer Comando\n");
         printf("v - Verificar estado do tabuleiro\n");
+        printf("a - Ajuda\n");
         printf("s - Sair\n");
         printf("Digite um comando: ");
         scanf("%s", comando);
@@ -51,8 +56,8 @@ int main() {
                 while (getchar() != '\n');
                 continue;
             }
-            empilhar(&historico, tabuleiro, linhas, colunas);
-            pintarDeBranco(tabuleiro, linha - 1, coluna - 1);
+            empilhar(&historico, linhas, colunas);
+            pintarDeBranco(linha - 1, coluna - 1);
 
         } else if (strncmp(comando, "r", 1) == 0) {
             if (scanf("%d %d", &linha, &coluna) != 2 || linha < 1 || linha > linhas || coluna < 1 || coluna > colunas) {
@@ -60,24 +65,30 @@ int main() {
                 while (getchar() != '\n');
                 continue;
             }
-            empilhar(&historico, tabuleiro, linhas, colunas);
-            riscarCasa(tabuleiro, linha - 1, coluna - 1);
+            empilhar(&historico, linhas, colunas);
+            riscarCasa(linha - 1, coluna - 1);
 
         } else if (strncmp(comando, "g", 1) == 0) {
             char nomeArquivo[50];
             scanf("%s", nomeArquivo);
-            gravarJogo(nomeArquivo, tabuleiro, linhas, colunas);
+            gravarJogo(nomeArquivo, linhas, colunas);
 
         } else if (strncmp(comando, "l", 1) == 0) {
             char nomeArquivo[50];
             scanf("%s", nomeArquivo);
-            carregarJogo(nomeArquivo, tabuleiro, &linhas, &colunas);
+            carregarJogo(nomeArquivo, &linhas, &colunas);
 
         } else if (strncmp(comando, "d", 1) == 0) {
-            desfazerComando(&historico, tabuleiro, &linhas, &colunas);
+            desfazerComando(&historico, &linhas, &colunas);
 
         } else if (strncmp(comando, "v", 1) == 0) {
-            verificarEstado(tabuleiro, linhas, colunas);
+            verificarEstado(linhas, colunas);
+
+        } else if (strncmp(comando, "a", 1) == 0) {
+            empilhar(&historico, linhas, colunas);
+            
+            verificarEstado(linhas, colunas);
+
 
         } else if (strncmp(comando, "s", 1) == 0) {
             printf("Saindo do jogo...\n");

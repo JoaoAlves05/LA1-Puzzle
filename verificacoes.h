@@ -3,6 +3,6 @@
 
 #include "tabuleiro.h"
 
-void verificarEstado(char tabuleiro[MAX_SIZE][MAX_SIZE], int linhas, int colunas);
+void verificarEstado(int linhas, int colunas);
 
 #endif // VERIFICACOES_H

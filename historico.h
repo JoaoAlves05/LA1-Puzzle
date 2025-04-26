@@ -3,8 +3,10 @@
 
 #include "tabuleiro.h"
 
+#define MAX_HISTORICO 100
+
 typedef struct {
-    char estado[MAX_SIZE][MAX_SIZE];
+    Celula celulas[MAX_SIZE][MAX_SIZE];
     int linhas;
     int colunas;
 } EstadoTabuleiro;
@@ -15,8 +17,8 @@ typedef struct {
 } PilhaEstados;
 
 void inicializarPilha(PilhaEstados *p);
-int empilhar(PilhaEstados *p, char tabuleiro[MAX_SIZE][MAX_SIZE], int linhas, int colunas);
-int desempilhar(PilhaEstados *p, char tabuleiro[MAX_SIZE][MAX_SIZE], int *linhas, int *colunas);
-void desfazerComando(PilhaEstados *historico, char tabuleiro[MAX_SIZE][MAX_SIZE], int *linhas, int *colunas);
+int empilhar(PilhaEstados *p, int linhas, int colunas);               
+int desempilhar(PilhaEstados *p, int *linhas, int *colunas);
+void desfazerComando(PilhaEstados *historico, int *linhas, int *colunas);
 
 #endif // HISTORICO_H

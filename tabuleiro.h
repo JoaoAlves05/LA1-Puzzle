@@ -2,11 +2,18 @@
 #define TABULEIRO_H
 
 #define MAX_SIZE 100
+typedef struct {
+    char original;  // Valor inicial (minúscula nunca muda)
+    char atual;     // Valor atual
+} Celula;
 
-void exibirTabuleiro(char tabuleiro[MAX_SIZE][MAX_SIZE], int linhas, int colunas);
-void pintarDeBranco(char tabuleiro[MAX_SIZE][MAX_SIZE], int linha, int coluna);
-void riscarCasa(char tabuleiro[MAX_SIZE][MAX_SIZE], int linha, int coluna);
-void gravarJogo(char *nomeArquivo, char tabuleiro[MAX_SIZE][MAX_SIZE], int linhas, int colunas);
-void carregarJogo(char *nomeArquivo, char tabuleiro[MAX_SIZE][MAX_SIZE], int *linhas, int *colunas);
+Celula tabuleiro[MAX_SIZE][MAX_SIZE];  // Tabuleiro de células
 
-#endif // TABULEIRO_H
+void exibirTabuleiro(int linhas, int colunas);
+void pintarDeBranco(int linha, int coluna);
+void riscarCasa(int linha, int coluna);
+void gravarJogo(char *nomeArquivo, int linhas, int colunas);
+void carregarJogo(char *nomeArquivo, int *linhas, int *colunas);
+
+
+#endif

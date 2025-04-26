@@ -1,26 +1,26 @@
 #include <stdio.h>
 #include "tabuleiro.h"
 
-void exibirTabuleiro(char tabuleiro[MAX_SIZE][MAX_SIZE], int linhas, int colunas) {
+void exibirTabuleiro(int linhas, int colunas) {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            printf("%c ", tabuleiro[i][j]);
+            printf("%c ", tabuleiro[i][j].atual);
         }
         printf("\n");
     }
 }
 
-void pintarDeBranco(char tabuleiro[MAX_SIZE][MAX_SIZE], int linha, int coluna) {
-    if (tabuleiro[linha][coluna] >= 'a' && tabuleiro[linha][coluna] <= 'z') {
-        tabuleiro[linha][coluna] -= 32; // Converte para maiúscula
+void pintarDeBranco(int linha, int coluna) {
+    if (tabuleiro[linha][coluna].atual == tabuleiro[linha][coluna].original) {
+        tabuleiro[linha][coluna].atual = toupper(tabuleiro[linha][coluna].original);
     }
 }
 
-void riscarCasa(char tabuleiro[MAX_SIZE][MAX_SIZE], int linha, int coluna) {
-    tabuleiro[linha][coluna] = '#';
+void riscarCasa(int linha, int coluna) {
+    tabuleiro[linha][coluna].atual = '#';
 }
 
-void gravarJogo(char *nomeArquivo, char tabuleiro[MAX_SIZE][MAX_SIZE], int linhas, int colunas) {
+void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
     FILE *arquivo = fopen(nomeArquivo, "w");
     if (!arquivo) {
         printf("Erro ao abrir o arquivo para gravação.\n");
@@ -30,16 +30,16 @@ void gravarJogo(char *nomeArquivo, char tabuleiro[MAX_SIZE][MAX_SIZE], int linha
     fprintf(arquivo, "%d %d\n", linhas, colunas);
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            fprintf(arquivo, "%c", tabuleiro[i][j]);
+            fprintf(arquivo, "%c", tabuleiro[i][j].atual);
         }
         fprintf(arquivo, "\n");
     }
 
     fclose(arquivo);
-    printf("Jogo salvo no arquivo '%s'.\n", nomeArquivo);
+    printf("Jogo guardado no arquivo '%s'.\n", nomeArquivo);
 }
 
-void carregarJogo(char *nomeArquivo, char tabuleiro[MAX_SIZE][MAX_SIZE], int *linhas, int *colunas) {
+void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
     FILE *arquivo = fopen(nomeArquivo, "r");
     if (!arquivo) {
         printf("Erro ao abrir o arquivo para leitura.\n");
@@ -49,7 +49,8 @@ void carregarJogo(char *nomeArquivo, char tabuleiro[MAX_SIZE][MAX_SIZE], int *li
     fscanf(arquivo, "%d %d", linhas, colunas);
     for (int i = 0; i < *linhas; i++) {
         for (int j = 0; j < *colunas; j++) {
-            fscanf(arquivo, " %c", &tabuleiro[i][j]);
+            fscanf(arquivo, " %c", &tabuleiro[i][j].atual);
+            tabuleiro[i][j].original = tolower(tabuleiro[i][j].atual);
         }
     }
 
