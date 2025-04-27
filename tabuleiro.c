@@ -2,7 +2,7 @@
 #include "tabuleiro.h"
 
 //Verificação do input das coordenadas
-int input_coordenada(const char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas) {
+int input_coordenada(char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas) {
     // Verifica se a coordenada tem o formato correto
     if (coordenada[0] == '\0' || !isalpha(coordenada[0]) || !isdigit(coordenada[1])) {
         return 0;  // Formato inválido

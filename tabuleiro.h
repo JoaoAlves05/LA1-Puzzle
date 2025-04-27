@@ -10,9 +10,10 @@ typedef struct {
 
 Celula tabuleiro[MAX_SIZE][MAX_SIZE];  // Declaração do tabuleiro como uma matriz de células
 
+int input_coordenada(char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas);
 void exibirTabuleiro(int linhas, int colunas);
-void pintarDeBranco(int linha, int coluna);
-void riscarCasa(int linha, int coluna);
+int pintarDeBranco(int linha, int coluna);
+int riscarCasa(int linha, int coluna);
 void gravarJogo(char *nomeArquivo, int linhas, int colunas);
 void carregarJogo(char *nomeArquivo, int *linhas, int *colunas);
 

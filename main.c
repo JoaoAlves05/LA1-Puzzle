@@ -47,24 +47,31 @@ int main() {
         printf("l <arquivo> - Carregar jogo\n");
         printf("d - Desfazer Comando\n");
         printf("v - Verificar estado do tabuleiro\n");
-        printf("a - Ajuda\n");
         printf("s - Sair\n");
         printf("Digite um comando: ");
         scanf("%s", comando);
 
         if (strcmp(comando, "b") == 0 || strcmp(comando, "r") == 0) {
-            scanf("%4s", coordenadas);
-            if (!parseCoordenada(coordenadas, &linha, &coluna, linhas, colunas)) {
-                printf("Coordenada inválida! Usa o formato <letra><número>\n");
+            // Verifica se a coordenada foi fornecida corretamente
+            if (scanf("%4s", coordenadas) != 1) {
+                printf("Erro: Digite uma coordenada (ex: 'b a1' ou 'r b3').\n");
+                while (getchar() != '\n'); // Limpa buffer de entrada
+                continue;
+            }
+            if (!input_coordenada(coordenadas, &linha, &coluna, linhas, colunas)) {
+                printf("Erro: Coordenada '%s' inválida. Use <letra><número> (ex: 'a1').\n", coordenadas);
                 continue;
             }
 
-            empilhar(&historico, linhas, colunas);  // Guarda o estado atual
-
+            // Empilha o tabuleiro apenas se as ações forem válidas
             if (strcmp(comando, "b") == 0) {
-                pintarDeBranco(linha, coluna);
+                if (pintarDeBranco(linha, coluna)) {
+                    empilhar(&historico, linhas, colunas);
+                }
             } else {
-                riscarCasa(linha, coluna);
+                if (riscarCasa(linha, coluna)) {
+                    empilhar(&historico, linhas, colunas);
+                }
             }
 
         } else if (strncmp(comando, "g", 1) == 0) {
@@ -82,12 +89,6 @@ int main() {
 
         } else if (strncmp(comando, "v", 1) == 0) {
             verificarEstado(linhas, colunas);
-
-        } else if (strncmp(comando, "a", 1) == 0) {
-            empilhar(&historico, linhas, colunas);
-            
-            verificarEstado(linhas, colunas);
-
 
         } else if (strncmp(comando, "s", 1) == 0) {
             printf("Saindo do jogo...\n");
