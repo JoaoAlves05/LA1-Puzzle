@@ -1,21 +1,27 @@
 #ifndef TABULEIRO_H
 #define TABULEIRO_H
 
-#define MAX_SIZE 100 // Tamanho máximo do tabuleiro
+#define MAX_SIZE 100  // Tamanho máximo do tabuleiro
 
+// Cada célula guarda o valor original (minúscula) e o estado atual (maiúscula ou '#')
 typedef struct {
-    char original;  // Valor inicial (minúscula nunca muda)
-    char atual;     // Valor atual
+    char original;
+    char atual;
 } Celula;
 
-Celula tabuleiro[MAX_SIZE][MAX_SIZE];  // Declaração do tabuleiro como uma matriz de células
+// Declaração externa do tabuleiro global (definido em tabuleiro.c)
+extern Celula tabuleiro[MAX_SIZE][MAX_SIZE];
 
-int input_coordenada(char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas);
+// Protótipos das funções de manipulação do tabuleiro
+int  input_coordenada(const char *coord,
+                      int *linha, int *coluna,
+                      int max_linhas, int max_colunas);
 void exibirTabuleiro(int linhas, int colunas);
-int pintarDeBranco(int linha, int coluna);
-int riscarCasa(int linha, int coluna);
-void gravarJogo(char *nomeArquivo, int linhas, int colunas);
-void carregarJogo(char *nomeArquivo, int *linhas, int *colunas);
+int  pintarDeBranco(int linha, int coluna);
+int  riscarCasa(int linha, int coluna);
+void gravarJogo(const char *nomeArquivo,
+               int linhas, int colunas);
+void carregarJogo(const char *nomeArquivo,
+                 int *linhas, int *colunas);
 
-
-#endif
+#endif // TABULEIRO_H

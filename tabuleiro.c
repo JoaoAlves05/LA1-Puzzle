@@ -1,21 +1,27 @@
-#include <stdio.h>
 #include "tabuleiro.h"
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>  // para atoi
 
-//Verificação do input das coordenadas
-int input_coordenada(char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas) {
-    // Verifica se a coordenada tem o formato correto
-    if (coordenada[0] == '\0' || !isalpha(coordenada[0]) || !isdigit(coordenada[1])) {
-        return 0;  // Formato inválido
-    }
+// Definição do tabuleiro global
+Celula tabuleiro[MAX_SIZE][MAX_SIZE];
 
-    *coluna = tolower(coordenada[0]) - 'a'; // Converte a letra da coordenada para índice do tabuleiro
-    *linha = atoi(coordenada + 1) - 1; // Converte string para inteiro de acordo com os índices do tabuleiro
+int input_coordenada(const char *coord,
+                     int *linha, int *coluna,
+                     int max_linhas, int max_colunas)
+{
+    if (!coord || !isalpha(coord[0]) || !isdigit(coord[1]))
+        return 0;
 
-    // Verifica se está dentro dos limites
-    return (*linha >= 0 && *linha < max_linhas && *coluna >= 0 && *coluna < max_colunas);
+    *coluna = tolower(coord[0]) - 'a';
+    *linha  = atoi(coord + 1) - 1;
+
+    return (*linha >= 0 && *linha < max_linhas &&
+            *coluna >= 0 && *coluna < max_colunas);
 }
 
-void exibirTabuleiro(int linhas, int colunas) {
+void exibirTabuleiro(int linhas, int colunas)
+{
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             printf("%c ", tabuleiro[i][j].atual);
@@ -24,74 +30,78 @@ void exibirTabuleiro(int linhas, int colunas) {
     }
 }
 
-//Função que pinta a casa de branco se já não estiver riscada ou pintada
-int pintarDeBranco(int linha, int coluna) {
-    if (tabuleiro[linha][coluna].atual == '#') {
-        printf("Erro: Essa casa já está riscada com #.\n");
+int pintarDeBranco(int linha, int coluna)
+{
+    char atual = tabuleiro[linha][coluna].atual;
+    if (atual == '#') {
+        printf("Erro: Essa casa já está riscada.\n");
         return 0;
     }
-    if (isupper(tabuleiro[linha][coluna].atual)) {
+    if (isupper(atual)) {
         printf("Erro: Essa casa já está pintada de branco.\n");
         return 0;
     }
+
     tabuleiro[linha][coluna].atual = toupper(tabuleiro[linha][coluna].original);
-    return 1; // Foi pintado com sucesso
+    return 1;
 }
 
-//Função que risca a casa se já não estiver riscada ou pintada
-int riscarCasa(int linha, int coluna) {
-    if (tabuleiro[linha][coluna].atual == '#') {
-        printf("Erro: Essa casa já está riscada com #.\n");
+int riscarCasa(int linha, int coluna)
+{
+    char atual = tabuleiro[linha][coluna].atual;
+    if (atual == '#') {
+        printf("Erro: Essa casa já está riscada.\n");
         return 0;
     }
-    if (isupper(tabuleiro[linha][coluna].atual)) {
+    if (isupper(atual)) {
         printf("Erro: Essa casa já está pintada de branco.\n");
         return 0;
     }
+
     tabuleiro[linha][coluna].atual = '#';
-    return 1; // Foi riscada com sucesso
+    return 1;
 }
 
-void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
+void gravarJogo(const char *nomeArquivo,
+               int linhas, int colunas)
+{
     FILE *arquivo = fopen(nomeArquivo, "w");
     if (!arquivo) {
-        printf("Erro ao abrir o arquivo para gravação.\n");
+        printf("Erro ao abrir arquivo para gravação.\n");
         return;
     }
 
-    // Grava o número de linhas e colunas
-    fprintf(arquivo, "%d %d\n", linhas, colunas); 
-
-    // Grava o tabuleiro atual
+    fprintf(arquivo, "%d %d\n", linhas, colunas);
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
-            fprintf(arquivo, "%c", tabuleiro[i][j].atual);
+            fputc(tabuleiro[i][j].atual, arquivo);
         }
-        fprintf(arquivo, "\n");
+        fputc('\n', arquivo);
     }
-
     fclose(arquivo);
-    printf("Jogo guardado no arquivo '%s'.\n", nomeArquivo);
+
+    printf("Jogo guardado em '%s'.\n", nomeArquivo);
 }
 
-void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
+void carregarJogo(const char *nomeArquivo,
+                 int *linhas, int *colunas)
+{
     FILE *arquivo = fopen(nomeArquivo, "r");
     if (!arquivo) {
-        printf("Erro ao abrir o arquivo para leitura.\n");
+        printf("Erro ao abrir arquivo para leitura.\n");
         return;
     }
 
-    // Lê o número de linhas e colunas
     fscanf(arquivo, "%d %d", linhas, colunas);
-
-    //Lê o estado do tabuleiro do arquivo
     for (int i = 0; i < *linhas; i++) {
         for (int j = 0; j < *colunas; j++) {
-            fscanf(arquivo, " %c", &tabuleiro[i][j].atual);
-            tabuleiro[i][j].original = tolower(tabuleiro[i][j].atual);
+            char c;
+            fscanf(arquivo, " %c", &c);
+            tabuleiro[i][j].atual    = c;
+            tabuleiro[i][j].original = tolower(c);
         }
     }
-
     fclose(arquivo);
-    printf("Jogo carregado do arquivo '%s'.\n", nomeArquivo);
+
+    printf("Jogo carregado de '%s'.\n", nomeArquivo);
 }

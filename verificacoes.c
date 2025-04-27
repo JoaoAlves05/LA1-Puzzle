@@ -1,123 +1,144 @@
 #include <stdio.h>
 #include <ctype.h>
-#include "verificacoes.h"
+#include <stdlib.h>
 #include "tabuleiro.h"
+#include "verificacoes.h"
 
-// Direções para linha/coluna (horizontal e vertical)
-int dir_linha_coluna[2][2] = {{0, 1}, {1, 0}};
+static int D[4][2] = {{-1,0}, {1,0}, {0,-1}, {0,1}};
 
-// Direções para os quatro vizinhos: cima, baixo, esquerda, direita
-int dir_vizinhos[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-
-// Verifica duplicados na linha ou coluna
-void verificarDuplicados(int i, int j, int linhas, int colunas, int *violacoes) {
+static void verificarDuplicados(int i, int j, int linhas,
+                                int colunas, int *viol)
+{
     char letra = tabuleiro[i][j].atual;
-
-    for (int direcao = 0; direcao < 2; direcao++) {
-        int count = 0;
-        int limite;
-        if (direcao == 0){
-            limite = colunas;
-        }else
-            limite = linhas;
-
-        for (int k = 0; k < limite; k++) {
-            char atual;
-            if (direcao == 0){
-                atual = tabuleiro[i][k].atual;
-            }else{
-                atual = tabuleiro[k][j].atual;
+    int cnt = 0;
+    // linha
+    for (int x = 0; x < colunas; x++)
+        if (tabuleiro[i][x].atual == letra)
+            cnt++;
+    if (cnt > 1) {
+        printf("Erro: Letra '%c' repetida %d vezes na linha %d\n",
+               letra, cnt, i+1);
+        (*viol)++;
     }
-            if (atual == letra) count++;
+    // coluna
+    cnt = 0;
+    for (int y = 0; y < linhas; y++)
+        if (tabuleiro[y][j].atual == letra)
+            cnt++;
+    if (cnt > 1) {
+        printf("Erro: Letra '%c' repetida %d vezes na coluna %d\n",
+               letra, cnt, j+1);
+        (*viol)++;
+    }
+}
+
+static void verificarReplicas(int i, int j, int linhas,
+                              int colunas, int *viol)
+{
+    char alvo = tolower(tabuleiro[i][j].atual);
+    for (int x = 0; x < colunas; x++) {
+        if (x == j) continue;
+        if (tabuleiro[i][x].original == alvo &&
+            tabuleiro[i][x].atual != '#') {
+            printf("Erro: Réplica '%c' não riscada na linha %d, coluna %d\n",
+                   alvo, i+1, x+1);
+            (*viol)++;
         }
-
-        if (count > 1) {
-            if (direcao == 0)
-                printf("Erro: Letra '%c' repetida %d vezes na linha %d\n", letra, count, i + 1);
-            else
-                printf("Erro: Letra '%c' repetida %d vezes na coluna %d\n", letra, count, j + 1);
-
-            (*violacoes)++;
+    }
+    for (int y = 0; y < linhas; y++) {
+        if (y == i) continue;
+        if (tabuleiro[y][j].original == alvo &&
+            tabuleiro[y][j].atual != '#') {
+            printf("Erro: Réplica '%c' não riscada na coluna %d, linha %d\n",
+                   alvo, j+1, y+1);
+            (*viol)++;
         }
     }
 }
 
-// Verifica se há réplicas (cópias da letra original) não riscadas
-void verificarReplicas(int i, int j, int linhas, int colunas, int *violacoes) {
-    char letra_alvo = tolower(tabuleiro[i][j].atual);
-
-    for (int direcao = 0; direcao < 2; direcao++) {
-        int limite;
-        if (direcao == 0)
-            limite = colunas;
-        else
-            limite = linhas;
-
-        for (int k = 0; k < limite; k++) {
-            if ((direcao == 0 && k == j) || (direcao == 1 && k == i)) continue;
-
-            char original, atual;
-            if (direcao == 0) {
-                original = tabuleiro[i][k].original;
-                atual = tabuleiro[i][k].atual;
-            } else {
-                original = tabuleiro[k][j].original;
-                atual = tabuleiro[k][j].atual;
-            }
-
-            if (original == letra_alvo && atual != '#') {
-                if (direcao == 0)
-                    printf("Erro: Réplica '%c' não riscada na linha %d, coluna %d\n", letra_alvo, i + 1, k + 1);
-                else
-                    printf("Erro: Réplica '%c' não riscada na coluna %d, linha %d\n", letra_alvo, j + 1, k + 1);
-
-                (*violacoes)++;
-            }
-        }
-    }
-}
-
-// Verifica se as casas riscadas têm vizinhos válidos (maiúsculos)
-void verificarVizinhos(int i, int j, int linhas, int colunas, int *violacoes) {
+static void verificarVizinhos(int i, int j, int linhas,
+                              int colunas, int *viol)
+{
     for (int d = 0; d < 4; d++) {
-        int ni = i + dir_vizinhos[d][0];
-        int nj = j + dir_vizinhos[d][1];
-
+        int ni = i + D[d][0], nj = j + D[d][1];
         if (ni >= 0 && ni < linhas && nj >= 0 && nj < colunas) {
             if (!isupper(tabuleiro[ni][nj].atual)) {
-                if (d == 0)
-                    printf("Erro: Casa (%d,%d) tem vizinho inválido acima\n", i + 1, j + 1);
-                else if (d == 1)
-                    printf("Erro: Casa (%d,%d) tem vizinho inválido abaixo\n", i + 1, j + 1);
-                else if (d == 2)
-                    printf("Erro: Casa (%d,%d) tem vizinho inválido à esquerda\n", i + 1, j + 1);
-                else if (d == 3)
-                    printf("Erro: Casa (%d,%d) tem vizinho inválido à direita\n", i + 1, j + 1);
-
-                (*violacoes)++;
+                const char *dirName = (d==0?"acima":d==1?"abaixo":d==2?"à esquerda":"à direita");
+                printf("Erro: Casa (%d,%d) tem vizinho inválido %s\n",
+                       i+1, j+1, dirName);
+                (*viol)++;
             }
         }
     }
 }
 
-// Verifica o estado completo do tabuleiro
-void verificarEstado(int linhas, int colunas) {
-    int violacoes = 0;
-
+static void verificarConectividade(int linhas, int colunas, int *viol)
+{
+    // conta brancas e encontra ponto inicial
+    int total = 0;
+    int si = -1, sj = -1;
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             if (isupper(tabuleiro[i][j].atual)) {
-                verificarDuplicados(i, j, linhas, colunas, &violacoes);
-                verificarReplicas(i, j, linhas, colunas, &violacoes);
-            }
-            if (tabuleiro[i][j].atual == '#') {
-                verificarVizinhos(i, j, linhas, colunas, &violacoes);
+                total++;
+                if (si < 0) { si = i; sj = j; }
             }
         }
     }
+    if (total < 2) return;  // nada a conectar ou só uma
 
-    if (violacoes == 0)
+    // BFS
+    int visit[MAX_SIZE][MAX_SIZE] = {{0}};
+    int queue[MAX_SIZE*MAX_SIZE][2];
+    int head = 0, tail = 0;
+
+    queue[tail][0] = si;
+    queue[tail][1] = sj;
+    tail++;
+    visit[si][sj] = 1;
+    int count = 1;
+
+    while (head < tail) {
+        int i = queue[head][0];
+        int j = queue[head][1];
+        head++;
+        for (int d = 0; d < 4; d++) {
+            int ni = i + D[d][0];
+            int nj = j + D[d][1];
+            if (ni >= 0 && ni < linhas && nj >= 0 && nj < colunas) {
+                if (isupper(tabuleiro[ni][nj].atual) && !visit[ni][nj]) {
+                    visit[ni][nj] = 1;
+                    queue[tail][0] = ni;
+                    queue[tail][1] = nj;
+                    tail++;
+                    count++;
+                }
+            }
+        }
+    }
+    if (count != total) {
+        printf("Erro: Casas brancas não estão conectadas ortogonalmente\n");
+        (*viol)++;
+    }
+}
+
+void verificarEstado(int linhas, int colunas)
+{
+    int viol = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (isupper(tabuleiro[i][j].atual)) {
+                verificarDuplicados(i, j, linhas, colunas, &viol);
+                verificarReplicas(i, j, linhas, colunas, &viol);
+            } else if (tabuleiro[i][j].atual == '#') {
+                verificarVizinhos(i, j, linhas, colunas, &viol);
+            }
+        }
+    }
+    verificarConectividade(linhas, colunas, &viol);
+
+    if (viol == 0)
         printf("\nTabuleiro válido! Todas as regras foram cumpridas.\n");
     else
-        printf("\nTotal de problemas encontrados: %d\n", violacoes);
+        printf("\nTotal de problemas encontrados: %d\n", viol);
 }
