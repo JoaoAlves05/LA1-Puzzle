@@ -32,7 +32,10 @@ int main(void)
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             char ch;
-            scanf(" %c", &ch);
+            if (scanf(" %c", &ch) != 1) {
+                printf("Erro de leitura de caractere.\n");
+                return 1;
+            }
             tabuleiro[i][j].original = tolower(ch);
             tabuleiro[i][j].atual    = tolower(ch);
         }
@@ -82,13 +85,19 @@ int main(void)
         } else if (strcmp(comando, "g") == 0) {
             // Gravar estado em arquivo
             char nome[50];
-            scanf("%s", nome);
+            if (scanf("%49s", nome) != 1) {
+                printf("Erro de leitura de nome de arquivo.\n");
+                return 1;
+            }
             gravarJogo(nome, linhas, colunas);
 
         } else if (strcmp(comando, "l") == 0) {
             // Carregar estado de arquivo e reiniciar histórico
             char nome[50];
-            scanf("%s", nome);
+            if (scanf("%49s", nome) != 1) {
+                printf("Erro de leitura de nome de arquivo.\n");
+                return 1;
+            }
             carregarJogo(nome, &linhas, &colunas);
             inicializarPilha(&historico);
             empilhar(&historico, linhas, colunas);

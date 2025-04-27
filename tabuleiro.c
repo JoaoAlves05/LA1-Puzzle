@@ -6,7 +6,7 @@
 // Definição do tabuleiro global
 Celula tabuleiro[MAX_SIZE][MAX_SIZE];
 
-int input_coordenada(const char *coord,
+int input_coordenada(char *coord,
                      int *linha, int *coluna,
                      int max_linhas, int max_colunas)
 {
@@ -62,7 +62,7 @@ int riscarCasa(int linha, int coluna)
     return 1;
 }
 
-void gravarJogo(const char *nomeArquivo,
+void gravarJogo(char *nomeArquivo,
                int linhas, int colunas)
 {
     FILE *arquivo = fopen(nomeArquivo, "w");
@@ -83,7 +83,7 @@ void gravarJogo(const char *nomeArquivo,
     printf("Jogo guardado em '%s'.\n", nomeArquivo);
 }
 
-void carregarJogo(const char *nomeArquivo,
+void carregarJogo(char *nomeArquivo,
                  int *linhas, int *colunas)
 {
     FILE *arquivo = fopen(nomeArquivo, "r");
@@ -92,11 +92,19 @@ void carregarJogo(const char *nomeArquivo,
         return;
     }
 
-    fscanf(arquivo, "%d %d", linhas, colunas);
+    if (fscanf(arquivo, "%d %d", linhas, colunas) != 2) {
+        printf("Erro no formato do arquivo: linhas/colunas.\n");
+        fclose(arquivo);
+        return;
+    }
     for (int i = 0; i < *linhas; i++) {
         for (int j = 0; j < *colunas; j++) {
             char c;
-            fscanf(arquivo, " %c", &c);
+            if (fscanf(arquivo, " %c", &c) != 1) {
+                printf("Erro no formato do tabuleiro no arquivo.\n");
+                fclose(arquivo);
+                return;
+            }
             tabuleiro[i][j].atual    = c;
             tabuleiro[i][j].original = tolower(c);
         }
