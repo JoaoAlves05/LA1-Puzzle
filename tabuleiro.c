@@ -2,13 +2,13 @@
 #include "tabuleiro.h"
 
 //Verificação do input das coordenadas
-int parseCoordenada(const char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas) {
+int input_coordenada(const char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas) {
     // Verifica se a coordenada tem o formato correto
     if (coordenada[0] == '\0' || !isalpha(coordenada[0]) || !isdigit(coordenada[1])) {
         return 0;  // Formato inválido
     }
 
-    *coluna = tolower(coordenada[0]) - 'a'; // Converte letra para índice
+    *coluna = tolower(coordenada[0]) - 'a'; // Converte a letra da coordenada para índice do tabuleiro
     *linha = atoi(coordenada + 1) - 1; // Converte string para inteiro de acordo com os índices do tabuleiro
 
     // Verifica se está dentro dos limites
@@ -24,15 +24,32 @@ void exibirTabuleiro(int linhas, int colunas) {
     }
 }
 
-void pintarDeBranco(int linha, int coluna) {
-    if (tabuleiro[linha][coluna].atual == tabuleiro[linha][coluna].original) {
-        // Pinta uma célula de branco se o atual for igual ao valor original)
-        tabuleiro[linha][coluna].atual = toupper(tabuleiro[linha][coluna].original);
+//Função que pinta a casa de branco se já não estiver riscada ou pintada
+int pintarDeBranco(int linha, int coluna) {
+    if (tabuleiro[linha][coluna].atual == '#') {
+        printf("Erro: Essa casa já está riscada com #.\n");
+        return 0;
     }
+    if (isupper(tabuleiro[linha][coluna].atual)) {
+        printf("Erro: Essa casa já está pintada de branco.\n");
+        return 0;
+    }
+    tabuleiro[linha][coluna].atual = toupper(tabuleiro[linha][coluna].original);
+    return 1; // Foi pintado com sucesso
 }
 
-void riscarCasa(int linha, int coluna) {
+//Função que risca a casa se já não estiver riscada ou pintada
+int riscarCasa(int linha, int coluna) {
+    if (tabuleiro[linha][coluna].atual == '#') {
+        printf("Erro: Essa casa já está riscada com #.\n");
+        return 0;
+    }
+    if (isupper(tabuleiro[linha][coluna].atual)) {
+        printf("Erro: Essa casa já está pintada de branco.\n");
+        return 0;
+    }
     tabuleiro[linha][coluna].atual = '#';
+    return 1; // Foi riscada com sucesso
 }
 
 void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
