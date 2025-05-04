@@ -2,7 +2,10 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>  // para atoi
-
+#include"verificacoes.h"
+#include "historico.h"
+#include <string.h>
+#include"verificacoes.c"
 // Definição do tabuleiro global
 Celula tabuleiro[MAX_SIZE][MAX_SIZE];
 
@@ -20,7 +23,7 @@ int input_coordenada(char *coord,
             *coluna >= 0 && *coluna < max_colunas);
 }
 
-void exibirTabuleiro(int linhas, int colunas)
+void exibirTabuleiro(int linhas, int colunas)   
 {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
@@ -112,4 +115,64 @@ void carregarJogo(char *nomeArquivo,
     fclose(arquivo);
 
     printf("Jogo carregado de '%s'.\n", nomeArquivo);
+}
+
+void resolver(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas) {
+    int progress = 1; // Flag to track if progress is being made
+
+    while (progress) {
+        progress = 0; // Reset progress flag
+
+        // Iterate through the board to apply rules
+        for (int i = 0; i < linhas; i++) {
+            for (int j = 0; j < colunas; j++) {
+                if (tabuleiro[i][j].atual == '.') { // Check empty cells
+                    int tempViolWhite = 0, tempViolBlocked = 0;
+
+                    // Try painting the cell white
+                    tabuleiro[i][j].atual = toupper(tabuleiro[i][j].original);
+                    verificarDuplicados(i, j, linhas, colunas, &tempViolWhite);
+                    verificarReplicas(i, j, linhas, colunas, &tempViolWhite);
+                    verificarVizinhos(i, j, linhas, colunas, &tempViolWhite);
+                    verificarConectividade(linhas, colunas, &tempViolWhite);
+
+                    // If painting white causes violations, try blocking the cell
+                    if (tempViolWhite > 0) {
+                        tabuleiro[i][j].atual = '#'; // Mark as blocked
+                        verificarDuplicados(i, j, linhas, colunas, &tempViolBlocked);
+                        verificarReplicas(i, j, linhas, colunas, &tempViolBlocked);
+                        verificarVizinhos(i, j, linhas, colunas, &tempViolBlocked);
+                        verificarConectividade(linhas, colunas, &tempViolBlocked);
+
+                        // If blocking also causes violations, revert to empty
+                        if (tempViolBlocked > 0) {
+                            tabuleiro[i][j].atual = '.';
+                        } else {
+                            progress = 1; // Progress made by blocking
+                        }
+                    } else {
+                        progress = 1; // Progress made by painting white
+                    }
+                }
+            }
+        }
+
+        // Check if the board is fully solved (no empty cells)
+        int solved = 1;
+        for (int i = 0; i < linhas && solved; i++) {
+            for (int j = 0; j < colunas && solved; j++) {
+                if (tabuleiro[i][j].atual == '.') {
+                    solved = 0; // Found an empty cell, not solved yet
+                }
+            }
+        }
+
+        if (solved) {
+            printf("Tabuleiro resolvido com sucesso!\n");
+            return;
+        }
+    }
+
+    // If no progress is made and the board is not solved, print a message
+    printf("Não foi possível resolver o tabuleiro completamente.\n");
 }
