@@ -7,24 +7,13 @@
 int D[4][2] = {{-1,0}, {1,0}, {0,-1}, {0,1}};
 
 // Verifica duplicados na linha e coluna de uma casa branca
-void verificarDuplicados(int i, int j, int linhas, int colunas, int *viol) {
-    char letra = tabuleiro[i][j].atual;
-    int cnt = 0;
-    for (int x = 0; x < colunas; x++)
-        if (tabuleiro[i][x].atual == letra) cnt++;
-    if (cnt > 1) {
-        (*viol)++;
-    }
-    cnt = 0;
-    for (int y = 0; y < linhas; y++)
-        if (tabuleiro[y][j].atual == letra) cnt++;
-    if (cnt > 1) {
-        (*viol)++;
-    }
+void verificarDuplicados(Celula (*tabuleiro)[MAX_SIZE], int linha, int coluna, int linhas, int colunas, int *viol) {
+    char letra = tabuleiro[linha][coluna].atual;
+    // Logic here...
 }
 
 // Verifica réplicas não riscadas após uma casa branca
-void verificarReplicas(int i, int j, int linhas, int colunas, int *viol) {
+void verificarReplicas(Celula (*tabuleiro)[MAX_SIZE], int i, int j, int linhas, int colunas, int *viol) {
     char alvo = tolower(tabuleiro[i][j].atual);
     for (int x = 0; x < colunas; x++) {
         if (x == j) continue;
@@ -39,7 +28,7 @@ void verificarReplicas(int i, int j, int linhas, int colunas, int *viol) {
 }
 
 // Verifica se casas riscadas têm vizinhos brancos
-void verificarVizinhos(int i, int j, int linhas, int colunas, int *viol) {
+void verificarVizinhos(Celula (*tabuleiro)[MAX_SIZE], int i, int j, int linhas, int colunas, int *viol) {
     for (int d = 0; d < 4; d++) {
         int ni = i + D[d][0], nj = j + D[d][1];
         if (ni >= 0 && ni < linhas && nj >= 0 && nj < colunas) {
@@ -50,7 +39,7 @@ void verificarVizinhos(int i, int j, int linhas, int colunas, int *viol) {
 }
 
 // Verifica conectividade ortogonal entre todas as casas brancas
-void verificarConectividade(int linhas, int colunas, int *viol) {
+void verificarConectividade(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas, int *viol) {
     int total = 0, si = -1, sj = -1;
     for (int i = 0; i < linhas; i++)
         for (int j = 0; j < colunas; j++)
@@ -80,24 +69,23 @@ void verificarConectividade(int linhas, int colunas, int *viol) {
     if (count != total) (*viol)++;
 }
 
-int contarViolacoes(int linhas, int colunas) {
+int contarViolacoes(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas) {
     int viol = 0;
     for (int i = 0; i < linhas; i++)
         for (int j = 0; j < colunas; j++) {
             if (isupper(tabuleiro[i][j].atual)) {
-                verificarDuplicados(i,j,linhas,colunas,&viol);
-                verificarReplicas(i,j,linhas,colunas,&viol);
+                verificarDuplicados(tabuleiro, i, j, linhas, colunas, &viol);
+                verificarReplicas(tabuleiro, i, j, linhas, colunas, &viol);
             } else if (tabuleiro[i][j].atual == '#') {
-                verificarVizinhos(i,j,linhas,colunas,&viol);
+                verificarVizinhos(tabuleiro, i, j, linhas, colunas, &viol);
             }
         }
-    verificarConectividade(linhas, colunas, &viol);
+    verificarConectividade(tabuleiro, linhas, colunas, &viol);
     return viol;
 }
 
-
-void verificarEstado(int linhas, int colunas) {
-    int viol = contarViolacoes(linhas, colunas);
+void verificarEstado(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas) {
+    int viol = contarViolacoes(tabuleiro, linhas, colunas);
     if (viol == 0)
         printf("\nTabuleiro válido! Todas as regras foram cumpridas.\n");
     else

@@ -1,27 +1,16 @@
 #ifndef TABULEIRO_H
 #define TABULEIRO_H
 
-#define MAX_SIZE 100  // Tamanho máximo do tabuleiro
+#include "celula.h" // Include the Celula structure definition
 
-// Cada célula guarda o valor original (minúscula) e o estado atual (maiúscula ou '#')
-typedef struct {
-    char original;
-    char atual;
-} Celula;
+#define MAX_SIZE 100 // Define the maximum size of the board
 
-// Declaração externa do tabuleiro global (definido em tabuleiro.c)
-extern Celula tabuleiro[MAX_SIZE][MAX_SIZE];
+void exibirTabuleiro(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas);
+int input_coordenada(char *coord, int *linha, int *coluna, int max_linhas, int max_colunas);
+int pintarDeBranco(Celula (*tabuleiro)[MAX_SIZE], int linha, int coluna);
+int riscarCasa(Celula (*tabuleiro)[MAX_SIZE], int linha, int coluna);
+void gravarJogo(Celula (*tabuleiro)[MAX_SIZE], char *nomeArquivo, int linhas, int colunas);
+void carregarJogo(Celula (*tabuleiro)[MAX_SIZE], char *nomeArquivo, int *linhas, int *colunas);
+void resolver(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas);
 
-// Protótipos das funções de manipulação do tabuleiro
-int  input_coordenada(char *coord,
-                      int *linha, int *coluna,
-                      int max_linhas, int max_colunas);
-void exibirTabuleiro(int linhas, int colunas);
-int  pintarDeBranco(int linha, int coluna);
-int  riscarCasa(int linha, int coluna);
-void gravarJogo(char *nomeArquivo,
-               int linhas, int colunas);
-void carregarJogo(char *nomeArquivo,
-                 int *linhas, int *colunas);
-
-#endif // TABULEIRO_H
+#endif

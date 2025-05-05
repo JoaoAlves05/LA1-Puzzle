@@ -7,18 +7,18 @@
 #include "historico.h"
 #include "verificacoes.h"
 
-int main(void)
-{
+int main(void) {
+    Celula tabuleiro[MAX_SIZE][MAX_SIZE]; // Declare the board locally
     int linhas, colunas;
     PilhaEstados historico;
     char comando[10];
     char coord[5];
     int l, c;
 
-    // Inicializa histórico de estados
+    // Initialize the history stack
     inicializarPilha(&historico);
 
-    // Leitura das dimensões do tabuleiro
+    // Read board dimensions
     printf("Digite o numero de linhas e colunas do tabuleiro: ");
     if (scanf("%d %d", &linhas, &colunas) != 2 ||
         linhas < 1 || colunas < 1 ||
@@ -27,7 +27,7 @@ int main(void)
         return 1;
     }
 
-    // Leitura do tabuleiro inicial e empilhamento do estado base
+    // Read the initial board and push the initial state
     printf("Digite o tabuleiro inicial (%d linhas de %d caracteres):\n", linhas, colunas);
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
@@ -37,70 +37,65 @@ int main(void)
                 return 1;
             }
             tabuleiro[i][j].original = tolower(ch);
-            tabuleiro[i][j].atual    = tolower(ch);
+            tabuleiro[i][j].atual = tolower(ch);
         }
     }
-    // Empilha o estado inicial para possibilitar desfazer até o início
-    empilhar(&historico, linhas, colunas);
+    empilhar(&historico, tabuleiro, linhas, colunas);
 
-    // Loop principal de comandos
+    // Main command loop
     while (1) {
         printf("\nTabuleiro atual:\n");
-        exibirTabuleiro(linhas, colunas);
+        exibirTabuleiro(tabuleiro, linhas, colunas);
 
         printf("\nComandos: b <coord>, r <coord>, d, v, g <file>, l <file>, s\n");
         printf("Digite um comando: ");
         if (scanf("%s", comando) != 1) break;
 
         if (strcmp(comando, "b") == 0 || strcmp(comando, "r") == 0) {
-            // Leitura e validação de coordenada
             if (scanf("%4s", coord) != 1 ||
                 !input_coordenada(coord, &l, &c, linhas, colunas)) {
                 printf("Erro: coordenada invalida (ex: a1).\n");
                 continue;
             }
-            // Empilha antes de mutar
-            empilhar(&historico, linhas, colunas);
+            empilhar(&historico, tabuleiro, linhas, colunas);
             if (comando[0] == 'b') {
-                if (!pintarDeBranco(l, c)) {
-                    // desfaz snapshot extra se falhar ação
-                    desfazerComando(&historico, &linhas, &colunas);
+                if (!pintarDeBranco(tabuleiro, l, c)) {
+                    desfazerComando(&historico, tabuleiro, &linhas, &colunas);
                 }
             } else {
-                if (!riscarCasa(l, c)) {
-                    desfazerComando(&historico, &linhas, &colunas);
+                if (!riscarCasa(tabuleiro, l, c)) {
+                    desfazerComando(&historico, tabuleiro, &linhas, &colunas);
                 }
             }
-            // Verificação imediata após cada ação do jogador
-            verificarEstado(linhas, colunas);
+            verificarEstado(tabuleiro, linhas, colunas);
 
         } else if (strcmp(comando, "d") == 0) {
-            // Desfazer último comando
-            desfazerComando(&historico, &linhas, &colunas);
+            desfazerComando(&historico, tabuleiro, &linhas, &colunas);
 
         } else if (strcmp(comando, "v") == 0) {
-            // Verificar regras sem mutar
-            verificarEstado(linhas, colunas);
+            verificarEstado(tabuleiro, linhas, colunas);
 
         } else if (strcmp(comando, "g") == 0) {
-            // Gravar estado em arquivo
             char nome[50];
             if (scanf("%49s", nome) != 1) {
                 printf("Erro de leitura de nome de arquivo.\n");
                 return 1;
             }
-            gravarJogo(nome, linhas, colunas);
+            gravarJogo(tabuleiro, nome, linhas, colunas);
 
         } else if (strcmp(comando, "l") == 0) {
-            // Carregar estado de arquivo e reiniciar histórico
             char nome[50];
             if (scanf("%49s", nome) != 1) {
                 printf("Erro de leitura de nome de arquivo.\n");
                 return 1;
             }
-            carregarJogo(nome, &linhas, &colunas);
+            carregarJogo(tabuleiro, nome, &linhas, &colunas);
             inicializarPilha(&historico);
-            empilhar(&historico, linhas, colunas);
+            empilhar(&historico, tabuleiro, linhas, colunas);
+
+        } else if (strcmp(comando, "R") == 0) {
+            printf("Resolver jogo:\n");
+            resolver(tabuleiro, linhas, colunas);
 
         } else if (strcmp(comando, "s") == 0) {
             printf("Saindo...\n");

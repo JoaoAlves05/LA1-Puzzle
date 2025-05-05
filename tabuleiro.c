@@ -5,7 +5,7 @@
 #include"verificacoes.h"
 #include "historico.h"
 #include <string.h>
-#include"verificacoes.c"
+#include "verificacoes.h"
 // Definição do tabuleiro global
 Celula tabuleiro[MAX_SIZE][MAX_SIZE];
 
@@ -23,8 +23,7 @@ int input_coordenada(char *coord,
             *coluna >= 0 && *coluna < max_colunas);
 }
 
-void exibirTabuleiro(int linhas, int colunas)   
-{
+void exibirTabuleiro(Celula (*tabuleiro)[MAX_SIZE], int linhas, int colunas) {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             printf("%c ", tabuleiro[i][j].atual);
