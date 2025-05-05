@@ -1,0 +1,1197 @@
+// ===== include/tabuleiro.h =====
+#ifndef TABULEIRO_H
+#define TABULEIRO_H
+
+#include <stdio.h>
+
+typedef struct {
+    char original;
+    char atual;
+} Celula;
+
+extern Celula **tabuleiro;
+extern int tabuleiro_linhas;
+
+void inicializarTabuleiro(int linhas, int colunas);
+void liberarTabuleiro(int linhas);
+int  input_coordenada(char *coord, int *linha, int *coluna,int max_linhas, int max_colunas);
+void exibirTabuleiro(int linhas, int colunas);
+int  pintarDeBranco(int linha, int coluna);
+int  riscarCasa(int linha, int coluna);
+void gravarJogo(char *nomeArquivo,int linhas, int colunas);
+void carregarJogo(char *nomeArquivo,int *linhas, int *colunas);
+void escreverTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo);
+int lerTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo);
+
+#endif
+
+// ===== include/historico.h =====
+#ifndef HISTORICO_H
+#define HISTORICO_H
+
+#include "tabuleiro.h"
+
+typedef struct {
+    int linha, coluna;
+    char valor_anterior;
+    char valor_novo;
+} AlteracaoTabuleiro;
+
+typedef struct {
+    AlteracaoTabuleiro *alteracoes;
+    int topo;
+    int capacidade;
+} PilhaAlteracoes;
+
+void inicializarPilha(PilhaAlteracoes *p);
+void liberarPilha(PilhaAlteracoes *p);
+void empilhar(PilhaAlteracoes *p, int linha, int coluna, char valor_anterior, char valor_novo);
+int desfazer(PilhaAlteracoes *p);
+
+#endif
+
+// ===== include/verificacoes.h =====
+#ifndef VERIFICACOES_H
+#define VERIFICACOES_H
+#include "historico.h"
+#include "tabuleiro.h"
+
+int contarDuplicados(int linhas, int colunas);
+int contarReplicas(int linhas, int colunas);
+int contarVizinhos(int linhas, int colunas);
+int contarConectividade(int linhas, int colunas);
+int contarTodasAsViolacoes(int linhas, int colunas);
+int contarBrancas(int linhas, int colunas);
+
+int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist);
+int pintar_vizinhos_riscados(int linhas, int colunas, PilhaAlteracoes *hist);
+int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist);
+int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist);
+int resolver_jogo(int linhas, int colunas, PilhaAlteracoes *hist);
+
+#endif
+
+// ===== include/comandos.h =====
+#ifndef COMANDOS_H
+#define COMANDOS_H
+#include "historico.h"
+
+void mostrar_menu();
+void processar_comando_branco(PilhaAlteracoes *historico, int *linhas, int *colunas);
+void processar_comando_riscar(PilhaAlteracoes *historico, int *linhas, int *colunas);
+void processar_comando_gravar(int linhas, int colunas);
+void processar_comando_carregar(int *linhas, int *colunas);
+void processar_comando_desfazer(PilhaAlteracoes *historico);
+void processar_comando_verificar(int linhas, int colunas);
+void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas);
+void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, int colunas);
+void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colunas);
+
+#endif
+
+// ===== src/tabuleiro.c =====
+#include "tabuleiro.h"
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
+Celula **tabuleiro = NULL;
+int tabuleiro_linhas = 0;
+
+void inicializarTabuleiro(int linhas, int colunas) {
+    tabuleiro = malloc(linhas * sizeof(Celula *));
+    for (int i = 0; i < linhas; i++) {
+        tabuleiro[i] = malloc(colunas * sizeof(Celula));
+    }
+    tabuleiro_linhas = linhas;
+}
+
+void liberarTabuleiro(int linhas) {
+    if (tabuleiro == NULL) return;
+    for (int i = 0; i < linhas; i++) {
+        free(tabuleiro[i]);
+    }
+    free(tabuleiro);
+    tabuleiro = NULL;
+    tabuleiro_linhas = 0;
+}
+
+int input_coordenada(char *coordenada, int *linha, int *coluna, int max_linhas, int max_colunas) {
+    if (!coordenada || !isalpha(coordenada[0]) || !isdigit(coordenada[1]))
+        return 0;
+    *coluna = tolower(coordenada[0]) - 'a';
+    *linha  = atoi(coordenada + 1) - 1;
+    return (*linha >= 0 && *linha < max_linhas && *coluna >= 0 && *coluna < max_colunas);
+}
+
+void exibirTabuleiro(int linhas, int colunas) {
+    printf("Tabuleiro atual:\n\n");
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            printf("%c ", tabuleiro[i][j].atual);
+        }
+        printf("\n");
+    }
+}
+
+int pintarDeBranco(int linha, int coluna){
+    char atual = tabuleiro[linha][coluna].atual;
+    if (atual == '#' || isupper(atual)) return 0;
+    tabuleiro[linha][coluna].atual = toupper(tabuleiro[linha][coluna].original);
+    return 1;
+}
+
+int riscarCasa(int linha, int coluna){
+    char atual = tabuleiro[linha][coluna].atual;
+    if (atual == '#' || isupper(atual)) return 0;
+    tabuleiro[linha][coluna].atual = '#';
+    return 1;
+}
+
+void escreverTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo) {
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            char valor = (tipo == 'O') ? tabuleiro[i][j].original : tabuleiro[i][j].atual;
+            fprintf(arquivo, "%c ", valor);
+        }
+        fprintf(arquivo, "\n");
+    }
+}
+
+int lerTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo) {
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            char c;
+            if (fscanf(arquivo, " %c", &c) != 1) return 0;
+            if (!(isalpha(c) || c == '#')) return 0;
+            if (tipo == 'O') tabuleiro[i][j].original = c;
+            else tabuleiro[i][j].atual = c;
+        }
+    }
+    return 1;
+}
+
+void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
+    FILE *arquivo = fopen(nomeArquivo, "w");
+    if (!arquivo) return;
+    fprintf(arquivo, "%d %d\n", linhas, colunas);
+    fprintf(arquivo, "ORIGINAL\n");
+    escreverTabuleiro(arquivo, linhas, colunas, 'O');
+    fprintf(arquivo, "ATUAL\n");
+    escreverTabuleiro(arquivo, linhas, colunas, 'A');
+    fclose(arquivo);
+}
+
+int procurar_separador(FILE *arquivo, const char *separador) {
+    char buffer[100];
+    while (fgets(buffer, sizeof(buffer), arquivo)) {
+        if (strstr(buffer, separador) != NULL) return 1;
+    }
+    return 0;
+}
+
+int ler_dimensoes(FILE *arquivo, int *linhas, int *colunas) {
+    return fscanf(arquivo, "%d %d", linhas, colunas) == 2 && *linhas > 0 && *colunas > 0;
+}
+
+int ler_tabuleiro_arquivo(FILE *arquivo, int linhas, int colunas, char tipo) {
+    return lerTabuleiro(arquivo, linhas, colunas, tipo);
+}
+
+void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
+    FILE *arquivo = fopen(nomeArquivo, "r");
+    if (!arquivo) return;
+    if (!ler_dimensoes(arquivo, linhas, colunas)) {
+        fclose(arquivo);
+        return;
+    }
+    if (tabuleiro != NULL) liberarTabuleiro(*linhas);
+    inicializarTabuleiro(*linhas, *colunas);
+    if (!procurar_separador(arquivo, "ORIGINAL")) {
+        fclose(arquivo);
+        return;
+    }
+    if (!ler_tabuleiro_arquivo(arquivo, *linhas, *colunas, 'O')) {
+        fclose(arquivo);
+        return;
+    }
+    if (!procurar_separador(arquivo, "ATUAL")) {
+        fclose(arquivo);
+        return;
+    }
+    if (!ler_tabuleiro_arquivo(arquivo, *linhas, *colunas, 'A')) {
+        fclose(arquivo);
+        return;
+    }
+    fclose(arquivo);
+}
+
+// ===== src/historico.c =====
+#include <stdio.h>
+#include <stdlib.h>
+#include "historico.h"
+
+void inicializarPilha(PilhaAlteracoes *p) {
+    p->topo = -1;
+    p->capacidade = 10;
+    p->alteracoes = malloc(p->capacidade * sizeof(AlteracaoTabuleiro));
+    if (!p->alteracoes) {
+        fprintf(stderr, "Erro ao alocar memória para a pilha de alterações.\n");
+        p->capacidade = 0;
+    }
+}
+
+void liberarPilha(PilhaAlteracoes *p) {
+    if (p->alteracoes) {
+        free(p->alteracoes);
+        p->alteracoes = NULL;
+    }
+    p->topo = -1;
+    p->capacidade = 0;
+}
+
+void empilhar(PilhaAlteracoes *p, int linha, int coluna, char valor_anterior, char valor_novo) {
+    if (p->capacidade == 0) return;
+    if (p->topo + 1 == p->capacidade) {
+        int nova_capacidade = p->capacidade * 2;
+        AlteracaoTabuleiro *novo = realloc(p->alteracoes, nova_capacidade * sizeof(AlteracaoTabuleiro));
+        if (!novo) return;
+        p->alteracoes = novo;
+        p->capacidade = nova_capacidade;
+    }
+    p->topo++;
+    p->alteracoes[p->topo].linha = linha;
+    p->alteracoes[p->topo].coluna = coluna;
+    p->alteracoes[p->topo].valor_anterior = valor_anterior;
+    p->alteracoes[p->topo].valor_novo = valor_novo;
+}
+
+int desfazer(PilhaAlteracoes *p) {
+    if (p->capacidade == 0 || !p->alteracoes) return 0;
+    if (p->topo < 0) return 0;
+    AlteracaoTabuleiro alt = p->alteracoes[p->topo--];
+    tabuleiro[alt.linha][alt.coluna].atual = alt.valor_anterior;
+    return 1;
+}
+
+// ===== src/verificacoes.c =====
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include "tabuleiro.h"
+#include "verificacoes.h"
+
+// Direções ortogonais (Cima, Baixo, Esquerda, Direita)
+const int D[4][2] = {{-1,0}, {1,0}, {0,-1}, {0,1}};
+
+int contarConectividade(int linhas, int colunas) {
+    int total_brancas = 0;
+    int si = -1, sj = -1;
+    
+    // Encontra a primeira casa branca e conta o total
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (isupper(tabuleiro[i][j].atual)) {
+                total_brancas++;
+                if (si < 0) { si = i; sj = j; }
+            }
+        }
+    }
+    
+    if (total_brancas <= 1) return 0; // Sem violação se tiver 0 ou 1 casa branca
+    
+    // Matriz de visitados
+    int **visit = malloc(linhas * sizeof(int *));
+    for (int i = 0; i < linhas; i++) 
+        visit[i] = calloc(colunas, sizeof(int));
+    
+    // BFS
+    int queue[linhas*colunas][2], head = 0, tail = 0, count = 1;
+    visit[si][sj] = 1;
+    queue[tail][0] = si; queue[tail][1] = sj; tail++;
+    
+    while (head < tail) {
+        int i = queue[head][0], j = queue[head][1];
+        head++;
+        
+        for (int d = 0; d < 4; d++) {
+            int ni = i + D[d][0], nj = j + D[d][1];
+            if (ni >= 0 && ni < linhas && nj >= 0 && nj < colunas && 
+                isupper(tabuleiro[ni][nj].atual) && !visit[ni][nj]) {
+                visit[ni][nj] = 1;
+                queue[tail][0] = ni; queue[tail][1] = nj; tail++;
+                count++;
+            }
+        }
+    }
+    
+    // Liberar memória
+    for (int i = 0; i < linhas; i++) free(visit[i]);
+    free(visit);
+    
+    return (count == total_brancas) ? 0 : 1; // Retorna 1 se houver desconexão
+}
+
+// Riscar letras duplicadas na mesma linha/coluna
+int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int alteracoes = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (!isupper(tabuleiro[i][j].atual)) continue;
+            
+            char letra = tolower(tabuleiro[i][j].atual);
+            // Verificar linha
+            for (int x = 0; x < colunas; x++) {
+                if (x != j && tolower(tabuleiro[i][x].atual) == letra) {
+                    if (tabuleiro[i][x].atual != '#') {
+                        char valor_ant = tabuleiro[i][x].atual;
+                        tabuleiro[i][x].atual = '#';
+                        empilhar(hist, i, x, valor_ant, '#');
+                        alteracoes++;
+                    }
+                }
+            }
+            // Verificar coluna
+            for (int y = 0; y < linhas; y++) {
+                if (y != i && tolower(tabuleiro[y][j].atual) == letra) {
+                    if (tabuleiro[y][j].atual != '#') {
+                        char valor_ant = tabuleiro[y][j].atual;
+                        tabuleiro[y][j].atual = '#';
+                        empilhar(hist, y, j, valor_ant, '#');
+                        alteracoes++;
+                    }
+                }
+            }
+        }
+    }
+    return alteracoes;
+}
+
+// Pintar vizinhos de casas riscadas
+int pintar_vizinhos_riscados(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int alteracoes = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (tabuleiro[i][j].atual != '#') continue;
+            
+            for (int d = 0; d < 4; d++) {
+                int ni = i + D[d][0], nj = j + D[d][1];
+                if (ni < 0 || ni >= linhas || nj < 0 || nj >= colunas) continue;
+                
+                if (islower(tabuleiro[ni][nj].atual)) {
+                    char valor_ant = tabuleiro[ni][nj].atual;
+                    char valor_novo = toupper(tabuleiro[ni][nj].original);
+                    tabuleiro[ni][nj].atual = valor_novo;
+                    empilhar(hist, ni, nj, valor_ant, valor_novo);
+                    alteracoes++;
+                }
+            }
+        }
+    }
+    return alteracoes;
+}
+
+// Função auxiliar para contar ocorrências de uma letra
+static int contar_ocorrencias(char letra, int linhas, int colunas) {
+    int count = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (tolower(tabuleiro[i][j].original) == tolower(letra) && 
+               tabuleiro[i][j].atual != '#') {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+
+int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int total_alteracoes = 0;
+    int alteracoes;
+
+    // Fase 1: Pintar réplicas únicas
+    alteracoes = pintar_replicas_unicas(linhas, colunas, hist);
+    total_alteracoes += alteracoes;
+
+    // Fase 2: Riscar duplicados
+    alteracoes = riscar_duplicados(linhas, colunas, hist);
+    total_alteracoes += alteracoes;
+
+    // Fase 3: Pintar vizinhos
+    alteracoes = pintar_vizinhos_riscados(linhas, colunas, hist);
+    total_alteracoes += alteracoes;
+
+    return total_alteracoes;
+}
+
+int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int alteracoes = 0;
+    // Para cada casa minúscula, verifica se é única
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (tabuleiro[i][j].atual == '#' || isupper(tabuleiro[i][j].atual)) continue;
+            
+            char letra = tabuleiro[i][j].original;
+            if (contar_ocorrencias(letra, linhas, colunas) == 1) {
+                char valor_ant = tabuleiro[i][j].atual;
+                char valor_novo = toupper(letra);
+                tabuleiro[i][j].atual = valor_novo;
+                empilhar(hist, i, j, valor_ant, valor_novo);
+                alteracoes++;
+            }
+        }
+    }
+    return alteracoes;
+}
+
+int resolver_jogo(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int iteracoes = 0;
+    const int MAX_ITERACOES = linhas * colunas * 2;
+    int violacoes = contarTodasAsViolacoes(linhas, colunas);
+
+    while (violacoes > 0 && iteracoes < MAX_ITERACOES) {
+        ajuda_automatica(linhas, colunas, hist);
+        violacoes = contarTodasAsViolacoes(linhas, colunas);
+        iteracoes++;
+    }
+
+    return (contarTodasAsViolacoes(linhas, colunas) == 0);
+}
+
+int contarDuplicados(int linhas, int colunas) {
+    int viol = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (!isupper(tabuleiro[i][j].atual)) continue;
+            char letra = tabuleiro[i][j].atual;
+            
+            // Verificar linha
+            for (int x = j+1; x < colunas; x++) {
+                if (tabuleiro[i][x].atual == letra) viol++;
+            }
+            // Verificar coluna
+            for (int y = i+1; y < linhas; y++) {
+                if (tabuleiro[y][j].atual == letra) viol++;
+            }
+        }
+    }
+    return viol;
+}
+
+int contarReplicas(int linhas, int colunas) {
+    int viol = 0;
+    // Para cada letra maiúscula, deve haver pelo menos uma minúscula correspondente não riscada
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (!isupper(tabuleiro[i][j].atual)) continue;
+            
+            char letra = tolower(tabuleiro[i][j].atual);
+            int tem_replica = 0;
+            
+            // Procurar uma réplica não riscada
+            for (int y = 0; y < linhas && !tem_replica; y++) {
+                for (int x = 0; x < colunas && !tem_replica; x++) {
+                    if ((y != i || x != j) && 
+                        tolower(tabuleiro[y][x].original) == letra && 
+                        tabuleiro[y][x].atual != '#' &&
+                        !isupper(tabuleiro[y][x].atual)) {
+                        tem_replica = 1;
+                    }
+                }
+            }
+            if (!tem_replica) viol++;
+        }
+    }
+    return viol;
+}
+
+int contarVizinhos(int linhas, int colunas) {
+    int viol = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (tabuleiro[i][j].atual != '#') continue;
+            
+            int tem_vizinho = 0;
+            // Verificar os 4 vizinhos ortogonais
+            for (int d = 0; d < 4; d++) {
+                int ni = i + D[d][0], nj = j + D[d][1];
+                if (ni >= 0 && ni < linhas && nj >= 0 && nj < colunas && 
+                    isupper(tabuleiro[ni][nj].atual)) {
+                    tem_vizinho = 1;
+                    break;
+                }
+            }
+            if (!tem_vizinho) viol++;
+        }
+    }
+    return viol;
+}
+
+int contarTodasAsViolacoes(int linhas, int colunas) {
+    int viol = 0;
+    
+    // Verificar duplicados
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (!isupper(tabuleiro[i][j].atual)) continue;
+            
+            char letra = tabuleiro[i][j].atual;
+            // Verificar linha
+            for (int x = j+1; x < colunas; x++) {
+                if (tabuleiro[i][x].atual == letra) viol++;
+            }
+            // Verificar coluna
+            for (int y = i+1; y < linhas; y++) {
+                if (tabuleiro[y][j].atual == letra) viol++;
+            }
+        }
+    }
+    
+    // Verificar vizinhos de casas riscadas
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (tabuleiro[i][j].atual != '#') continue;
+            
+            int tem_vizinho = 0;
+            for (int d = 0; d < 4; d++) {
+                int ni = i + D[d][0], nj = j + D[d][1];
+                if (ni >= 0 && ni < linhas && nj >= 0 && nj < colunas && 
+                    isupper(tabuleiro[ni][nj].atual)) {
+                    tem_vizinho = 1;
+                    break;
+                }
+            }
+            if (!tem_vizinho) viol++;
+        }
+    }
+    
+    return viol;
+}
+
+// ===== src/comandos.c =====
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "tabuleiro.h"
+#include "historico.h"
+#include "verificacoes.h"
+#include "comandos.h"
+
+void mostrar_menu() {
+    printf("\nComandos:\n");
+    printf("b <coord> - Pintar de branco\n");
+    printf("r <coord> - Riscar casa\n");
+    printf("a - Ajuda (1 passo)\n");
+    printf("A - Ajuda repetida\n");
+    printf("R - Resolver automaticamente\n");
+    printf("g <file> - Gravar jogo\n");
+    printf("l <file> - Carregar jogo\n");
+    printf("d - Desfazer\n");
+    printf("v - Verificar violações\n");
+    printf("s - Sair\n");
+}
+
+// Função comum para processar coordenadas
+ int obter_coordenada(int linhas, int colunas, int *l, int *c) {
+    char coord[5];
+    if (scanf("%4s", coord) != 1 || !input_coordenada(coord, l, c, linhas, colunas)) {
+        printf("Coordenada inválida! Use formato a1\n");
+        return 0;
+    }
+    return 1;
+}
+
+void processar_comando_branco(PilhaAlteracoes *historico, int *linhas, int *colunas) {
+    char coord[5]; 
+    int l, c;
+    if (scanf("%4s", coord) != 1 || !input_coordenada(coord, &l, &c, *linhas, *colunas)) {
+        printf("Erro: coordenada inválida\n");
+        return;
+    }
+    char valor_ant = tabuleiro[l][c].atual;
+    char valor_novo = toupper(tabuleiro[l][c].original);
+    if (!pintarDeBranco(l, c)) return;
+    
+    empilhar(historico, l, c, valor_ant, valor_novo);
+    printf("Violações: %d\n", contarTodasAsViolacoes(*linhas, *colunas));
+}
+
+void processar_comando_riscar(PilhaAlteracoes *historico, int *linhas, int *colunas) {
+    char coord[5];
+    int l, c;
+    if (scanf("%4s", coord) != 1 || !input_coordenada(coord, &l, &c, *linhas, *colunas)) {
+        printf("Erro: coordenada inválida\n");
+        return;
+    }
+    char valor_ant = tabuleiro[l][c].atual;
+    char valor_novo = '#';
+    if (!riscarCasa(l, c)) return;
+    
+    empilhar(historico, l, c, valor_ant, valor_novo);
+    printf("Violações: %d\n", contarTodasAsViolacoes(*linhas, *colunas));
+}
+
+void processar_comando_gravar(int linhas, int colunas) {
+    char nome[50];
+    printf("Nome do arquivo: ");
+    if (scanf("%49s", nome) != 1) return;
+    gravarJogo(nome, linhas, colunas);
+}
+
+void processar_comando_carregar(int *linhas, int *colunas) {
+    char nome[50];
+    printf("Nome do arquivo: ");
+    if (scanf("%49s", nome) != 1) return;
+    carregarJogo(nome, linhas, colunas);
+}
+
+void processar_comando_desfazer(PilhaAlteracoes *h) {
+    printf(desfazer(h) ? "Desfeito!\n" : "Nada para desfazer!\n");
+}
+
+void processar_comando_verificar(int linhas, int colunas) {
+    int viol = contarTodasAsViolacoes(linhas, colunas);
+    printf(viol ? "Violações: %d\n" : "Tabuleiro válido!\n", viol);
+}
+
+void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas) {
+    printf("\nEstado inicial:\n");
+    exibirTabuleiro(linhas, colunas);
+    
+    int alteracoes = ajuda_automatica(linhas, colunas, historico);
+    
+    if (alteracoes > 0) {
+        printf("\nTotal de alterações: %d\n", alteracoes);
+        printf("\nEstado final:\n");
+        exibirTabuleiro(linhas, colunas);
+        
+        int violacoes = contarTodasAsViolacoes(linhas, colunas);
+        if (violacoes == 0) {
+            printf("\nTabuleiro resolvido!\n");
+        } else {
+            printf("\nViolações restantes: %d\n", violacoes);
+        }
+    } else {
+        printf("\nNenhuma alteração possível.\n");
+    }
+}
+
+void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, int colunas) {
+    printf("\nEstado inicial:\n");
+    exibirTabuleiro(linhas, colunas);
+    
+    int total = 0;
+    int passo = 1;
+    
+    do {
+        printf("\nPasso %d:\n", passo++);
+        int alteracoes = ajuda_automatica(linhas, colunas, historico);
+        if (alteracoes == 0) break;
+        total += alteracoes;
+        
+        int violacoes = contarTodasAsViolacoes(linhas, colunas);
+        if (violacoes == 0) {
+            printf("\nTabuleiro resolvido!\n");
+            break;
+        }
+    } while (1);
+    
+    if (total > 0) {
+        printf("\nTotal de alterações: %d\n", total);
+    } else {
+        printf("\nNenhuma alteração possível.\n");
+    }
+}
+
+void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colunas) {
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+
+    printf("\nEstado inicial:\n");
+    exibirTabuleiro(linhas, colunas);
+
+    if (resolver_jogo(linhas, colunas, &hist)) {
+        printf("\nSolução encontrada!\n");
+        exibirTabuleiro(linhas, colunas);
+    } else {
+        printf("\nSolução parcial encontrada. Verifique violações remanescentes.\n");
+        exibirTabuleiro(linhas, colunas);
+    }
+
+    // Transferir alterações para o histórico principal
+    while (hist.topo >= 0) {
+        AlteracaoTabuleiro alt = hist.alteracoes[hist.topo--];
+        empilhar(historico, alt.linha, alt.coluna, alt.valor_anterior, alt.valor_novo);
+    }
+
+    liberarPilha(&hist);
+}
+
+// ===== src/main.c =====
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "tabuleiro.h"
+#include "historico.h"
+#include "verificacoes.h"
+#include "comandos.h"
+
+int main(void){
+    int linhas, colunas;
+    PilhaAlteracoes historico;
+    char comando[10];
+
+    inicializarPilha(&historico);
+
+    printf("Digite o numero de linhas e colunas do tabuleiro: ");
+    if (scanf("%d %d", &linhas, &colunas) != 2 || linhas < 1 || colunas < 1) {
+        printf("Tamanho invalido.\n");
+        return 1;
+    }
+    inicializarTabuleiro(linhas, colunas);
+
+    printf("Digite o tabuleiro inicial (%d linhas de %d caracteres):\n", linhas, colunas);
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            char ch;
+            if (scanf(" %c", &ch) != 1) {
+                printf("Erro de leitura de caractere.\n");
+                return 1;
+            }
+            // Armazena o caractere original e atual(que neste momento são iguais)
+            tabuleiro[i][j].original = tolower(ch);
+            tabuleiro[i][j].atual    = tolower(ch);
+        }
+    }
+    putchar('\n');
+
+    while (1) {
+        exibirTabuleiro(linhas, colunas);
+        mostrar_menu();
+        printf("Digite um comando: ");
+        if (scanf("%s", comando) != 1) break;
+
+        if (strcmp(comando, "b") == 0) {
+            processar_comando_branco(&historico, &linhas, &colunas);
+        } else if (strcmp(comando, "r") == 0) {
+            processar_comando_riscar(&historico, &linhas, &colunas);
+        }else if (strcmp(comando, "a") == 0) {
+            processar_comando_ajuda(&historico, linhas, colunas);
+        } else if (strcmp(comando, "A") == 0) {
+            processar_comando_ajuda_repetida(&historico, linhas, colunas);
+        } else if (strcmp(comando, "R") == 0) {
+            processar_comando_resolver(&historico, linhas, colunas);
+        } else if (strcmp(comando, "d") == 0) {
+            processar_comando_desfazer(&historico);
+            printf("\nEstado após desfazer:\n");
+            exibirTabuleiro(linhas, colunas);
+            printf("Violações: %d\n", contarTodasAsViolacoes(linhas, colunas));
+        } else if (strcmp(comando, "v") == 0) {
+            processar_comando_verificar(linhas, colunas);
+        } else if (strcmp(comando, "g") == 0) {
+            processar_comando_gravar(linhas, colunas);
+        } else if (strcmp(comando, "l") == 0) {
+            liberarPilha(&historico); // Ao carregar novo jogo, limpa histórico
+            inicializarPilha(&historico); // Reinicializa a pilha
+            processar_comando_carregar(&linhas, &colunas);
+        } else if (strcmp(comando, "s") == 0) {
+            printf("Saindo...\n");
+            liberarTabuleiro(linhas);
+            liberarPilha(&historico);
+            break;
+        } else {
+            printf("Comando invalido!\n");
+        }
+    }
+
+    liberarTabuleiro(linhas);
+    liberarPilha(&historico);
+    return 0;
+}
+
+// ===== test/test_tabuleiro.c =====
+#include <CUnit/Basic.h>
+#include "tabuleiro.h"
+#include <ctype.h>
+#include "historico.h"
+
+void test_input_coordenada_valida(void) {
+    int l, c;
+    CU_ASSERT_TRUE(input_coordenada("a1", &l, &c, 5, 5));
+    CU_ASSERT_EQUAL(l, 0);
+    CU_ASSERT_EQUAL(c, 0);
+}
+
+void test_input_coordenada_invalida(void) {
+    int l, c;
+    CU_ASSERT_FALSE(input_coordenada("z9", &l, &c, 5, 5));
+    CU_ASSERT_FALSE(input_coordenada("1a", &l, &c, 5, 5));
+}
+
+void test_pintar_e_riscar(void) {
+    inicializarTabuleiro(2, 2);
+    tabuleiro[0][0].original = 'x';
+    tabuleiro[0][0].atual    = 'x';
+    // pintar
+    CU_ASSERT_TRUE(pintarDeBranco(0, 0));
+    CU_ASSERT_TRUE(isupper(tabuleiro[0][0].atual));
+    CU_ASSERT_FALSE(pintarDeBranco(0, 0));
+    // riscar
+    tabuleiro[1][1].original = 'y';
+    tabuleiro[1][1].atual    = 'y';
+    CU_ASSERT_TRUE(riscarCasa(1, 1));
+    CU_ASSERT_EQUAL(tabuleiro[1][1].atual, '#');
+    CU_ASSERT_FALSE(riscarCasa(1, 1));
+    liberarTabuleiro(2);
+}
+
+void test_pintar_e_riscar_com_historico(void) {
+    PilhaAlteracoes h;
+    inicializarPilha(&h);
+    inicializarTabuleiro(2, 2);
+    tabuleiro[0][0].original = 'x';
+    tabuleiro[0][0].atual    = 'x';
+    // pintar
+    char valor_ant = tabuleiro[0][0].atual;
+    char valor_novo = toupper(tabuleiro[0][0].original);
+    CU_ASSERT_TRUE(pintarDeBranco(0, 0));
+    empilhar(&h, 0, 0, valor_ant, valor_novo);
+    CU_ASSERT_TRUE(isupper(tabuleiro[0][0].atual));
+    CU_ASSERT_FALSE(pintarDeBranco(0, 0));
+    // desfazer
+    CU_ASSERT_TRUE(desfazer(&h));
+    CU_ASSERT_EQUAL(tabuleiro[0][0].atual, 'x');
+    // riscar
+    tabuleiro[1][1].original = 'y';
+    tabuleiro[1][1].atual    = 'y';
+    valor_ant = tabuleiro[1][1].atual;
+    valor_novo = '#';
+    CU_ASSERT_TRUE(riscarCasa(1, 1));
+    empilhar(&h, 1, 1, valor_ant, valor_novo);
+    CU_ASSERT_EQUAL(tabuleiro[1][1].atual, '#');
+    CU_ASSERT_FALSE(riscarCasa(1, 1));
+    // desfazer
+    CU_ASSERT_TRUE(desfazer(&h));
+    CU_ASSERT_EQUAL(tabuleiro[1][1].atual, 'y');
+    liberarTabuleiro(2);
+    liberarPilha(&h);
+}
+
+int main(void) {
+    CU_initialize_registry();
+    CU_pSuite suite = CU_add_suite("TabuleiroSuite", NULL, NULL);
+    CU_add_test(suite, "input valida", test_input_coordenada_valida);
+    CU_add_test(suite, "input invalida", test_input_coordenada_invalida);
+    CU_add_test(suite, "pintar e riscar", test_pintar_e_riscar);
+    CU_add_test(suite, "pintar/riscar com historico", test_pintar_e_riscar_com_historico);
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
+}
+
+// ===== test/test_historico.c =====
+#include <CUnit/Basic.h>
+#include "historico.h"
+
+void test_empilhar_desfazer(void) {
+    PilhaAlteracoes h;
+    inicializarPilha(&h);
+    inicializarTabuleiro(2, 2);
+    tabuleiro[0][0].original = 'a';
+    tabuleiro[0][0].atual    = 'a';
+    // Simula pintar de branco
+    empilhar(&h, 0, 0, 'a', 'A');
+    tabuleiro[0][0].atual = 'A';
+    CU_ASSERT_TRUE(desfazer(&h));
+    CU_ASSERT_EQUAL(tabuleiro[0][0].atual, 'a');
+    liberarTabuleiro(2);
+    liberarPilha(&h);
+}
+
+int main(void) {
+    CU_initialize_registry();
+    CU_pSuite suite = CU_add_suite("HistoricoSuite", NULL, NULL);
+    CU_add_test(suite, "empilhar & desfazer", test_empilhar_desfazer);
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
+}
+
+// ===== test/test_verificacoes.c =====
+#include <CUnit/Basic.h>
+#include "tabuleiro.h"
+#include "verificacoes.h"
+#include "historico.h"
+#include <ctype.h>
+
+void init_tabuleiro(const char *data, int linhas, int colunas) {
+    inicializarTabuleiro(linhas, colunas);
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            char c = data[i * colunas + j];
+            tabuleiro[i][j].original = tolower(c);
+            tabuleiro[i][j].atual = c;
+        }
+    }
+}
+
+void test_duplicados(void) {
+    init_tabuleiro("AABBCDEFG", 3, 3);
+    tabuleiro[0][0].atual = 'A';
+    tabuleiro[0][1].atual = 'A';
+    tabuleiro[1][0].atual = 'A';
+    CU_ASSERT_EQUAL(contarDuplicados(3, 3), 2);
+    liberarTabuleiro(3);
+}
+
+void test_replicas(void) {
+    init_tabuleiro("AaBbCcDdE", 3, 3);
+    tabuleiro[2][2].atual = 'E';
+    CU_ASSERT_EQUAL(contarReplicas(3, 3), 1);
+    liberarTabuleiro(3);
+}
+
+void test_vizinhos(void) {
+    init_tabuleiro("Aa#Bb#Cc#", 3, 3);
+    CU_ASSERT_EQUAL(contarVizinhos(3, 3), 3);
+    liberarTabuleiro(3);
+}
+
+void test_conectividade(void) {
+    init_tabuleiro("AaBbCcDdE", 3, 3);
+    tabuleiro[0][0].atual = 'A';
+    tabuleiro[2][2].atual = 'E';
+    CU_ASSERT_EQUAL(contarConectividade(3, 3), 1);
+    liberarTabuleiro(3);
+}
+
+void test_nao_retangular(void) {
+    init_tabuleiro("AaBbCc", 3, 2);
+    CU_ASSERT_EQUAL(contarTodasAsViolacoes(3, 2), 0);
+    liberarTabuleiro(3);
+}
+
+void test_riscar_duplicados(void) {
+    init_tabuleiro("AaBcD", 1, 5);
+    tabuleiro[0][0].atual = 'A';
+    
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    int alt = riscar_duplicados(1, 5, &hist);
+    CU_ASSERT_EQUAL(alt, 1);
+    CU_ASSERT_EQUAL(tabuleiro[0][1].atual, '#');
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(1);
+}
+
+void test_pintar_vizinhos_riscados(void) {
+    init_tabuleiro("a#bcd", 1, 5);
+    
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    int alt = pintar_vizinhos_riscados(1, 5, &hist);
+    CU_ASSERT_EQUAL(alt, 2);
+    CU_ASSERT(isupper(tabuleiro[0][0].atual));
+    CU_ASSERT(isupper(tabuleiro[0][2].atual));
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(1);
+}
+
+void test_resolver_jogo(void) {
+    const char *tab_ini = "ecadcdcdecbdceedecdeebaccbb";
+    init_tabuleiro(tab_ini, 5, 5);
+    
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    int result = resolver_jogo(5, 5, &hist);
+    CU_ASSERT_TRUE(result);
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(5);
+}
+
+// Testes para ajuda automática
+void test_ajuda_automatica(void) {
+    init_tabuleiro("aabbcc", 2, 3);
+    tabuleiro[0][0].atual = 'A';  // Pintar primeiro 'a'
+    
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    int alt = ajuda_automatica(2, 3, &hist);
+    CU_ASSERT(alt > 0);  // Deve fazer pelo menos uma alteração
+    CU_ASSERT_EQUAL(tabuleiro[0][1].atual, '#'); // Deve riscar a réplica
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(2);
+}
+
+// Teste para verificar a ordem das regras na ajuda automática
+void test_ordem_regras(void) {
+    init_tabuleiro("abcabc", 2, 3);
+    tabuleiro[0][0].atual = 'A';  // Pintar primeiro 'a'
+    
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    ajuda_automatica(2, 3, &hist);
+    
+    // Verifica se primeiro riscou duplicados
+    CU_ASSERT_EQUAL(tabuleiro[1][0].atual, '#');
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(2);
+}
+
+int main(void) {
+    CU_initialize_registry();
+    CU_pSuite suite = CU_add_suite("VerificacoesSuite", NULL, NULL);
+
+    CU_add_test(suite, "duplicados", test_duplicados);
+    CU_add_test(suite, "réplicas", test_replicas);
+    CU_add_test(suite, "vizinhos", test_vizinhos);
+    CU_add_test(suite, "conectividade", test_conectividade);
+    CU_add_test(suite, "não_retangular", test_nao_retangular);
+    CU_add_test(suite, "ajuda_automatica", test_ajuda_automatica);
+    CU_add_test(suite, "ordem_regras", test_ordem_regras);
+    CU_add_test(suite, "riscar_duplicados", test_riscar_duplicados);
+    CU_add_test(suite, "pintar_vizinhos", test_pintar_vizinhos_riscados);
+    CU_add_test(suite, "resolver_jogo", test_resolver_jogo);
+
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
+}
+
+// ===== test/test_comandos.c =====
+#include <CUnit/Basic.h>
+#include "comandos.h"
+#include "tabuleiro.h"
+#include "verificacoes.h"
+#include "historico.h"
+
+// Função auxiliar para inicializar tabuleiro de teste
+void init_tabuleiro(const char *data, int linhas, int colunas) {
+    inicializarTabuleiro(linhas, colunas);
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            char c = data[i * colunas + j];
+            tabuleiro[i][j].original = tolower(c);
+            tabuleiro[i][j].atual = c;
+        }
+    }
+}
+
+void test_mostrar_menu(void) {
+    mostrar_menu();
+    CU_ASSERT(1);
+}
+
+void test_comando_a(void) {
+    inicializarTabuleiro(3, 3);
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    processar_comando_ajuda(&hist, 3, 3);
+    CU_ASSERT_TRUE(hist.topo >= -1);
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(3);
+}
+
+void test_comando_R(void) {
+    inicializarTabuleiro(5, 5);
+    const char *tab_ini = "ecadcdcdecbdceedecdeebaccbb";
+    init_tabuleiro(tab_ini, 5, 5);
+
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+
+    processar_comando_resolver(&hist, 5, 5);
+    CU_ASSERT(isupper(tabuleiro[0][0].atual));
+
+    liberarPilha(&hist);
+    liberarTabuleiro(5);
+}
+
+void test_comando_ajuda(void) {
+    init_tabuleiro("aabbcc", 2, 3);
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    tabuleiro[0][0].atual = 'A'; // Pintamos uma casa
+    processar_comando_ajuda(&hist, 2, 3);
+    
+    // Deve ter riscado a réplica
+    CU_ASSERT_EQUAL(tabuleiro[0][1].atual, '#');
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(2);
+}
+
+void test_comando_ajuda_repetida(void) {
+    init_tabuleiro("aabbcc", 2, 3);
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+    
+    tabuleiro[0][0].atual = 'A'; // Pintamos uma casa
+    processar_comando_ajuda_repetida(&hist, 2, 3);
+    
+    // Deve ter feito várias alterações
+    int alteracoes = 0;
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (tabuleiro[i][j].atual != tolower(tabuleiro[i][j].original)) {
+                alteracoes++;
+            }
+        }
+    }
+    CU_ASSERT(alteracoes > 1);
+    
+    liberarPilha(&hist);
+    liberarTabuleiro(2);
+}
+
+void test_comando_resolver(void) {
+    const char *tab_ini = "aabbcc";
+    init_tabuleiro(tab_ini, 2, 3);
+
+    PilhaAlteracoes hist;
+    inicializarPilha(&hist);
+
+    processar_comando_resolver(&hist, 2, 3);
+
+    // Verificar se não há violações
+    CU_ASSERT_EQUAL(contarTodasAsViolacoes(2, 3), 0);
+
+    liberarPilha(&hist);
+    liberarTabuleiro(2);
+}
+
+int main(void) {
+    CU_initialize_registry();
+    CU_pSuite suite = CU_add_suite("ComandosSuite", NULL, NULL);
+    
+    CU_add_test(suite, "mostrar_menu", test_mostrar_menu);
+    CU_add_test(suite, "comando_a", test_comando_a);
+    CU_add_test(suite, "comando_R", test_comando_R);
+    CU_add_test(suite, "comando_ajuda", test_comando_ajuda);
+    CU_add_test(suite, "comando_ajuda_repetida", test_comando_ajuda_repetida);
+    CU_add_test(suite, "comando_resolver", test_comando_resolver);
+
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
+}
