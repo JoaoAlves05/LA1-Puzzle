@@ -47,7 +47,7 @@ void test_conectividade_ilhas(void) {
 
 void test_resolver_exemplo(void) {
     // Original project example (25 chars)
-    const char *tab_ini = "ecadcdcdecbdceedecdeebacc";
+    char *tab_ini = "ecadcdcdecbdceedecdeebacc";
     init_tabuleiro_test(tab_ini, 5, 5);
     
     PilhaAlteracoes hist;
@@ -55,6 +55,14 @@ void test_resolver_exemplo(void) {
     
     CU_ASSERT_TRUE(resolver_jogo(5, 5, &hist));
     CU_ASSERT_EQUAL(contarTodasAsViolacoes(5, 5), 0);
+    
+    // Verifica que só há maiúsculas ou # no tabuleiro final
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            char c = tabuleiro[i][j].atual;
+            CU_ASSERT_TRUE(isupper(c) || c == '#');
+        }
+    }
     
     liberarPilha(&hist);
     liberarTabuleiro(5);

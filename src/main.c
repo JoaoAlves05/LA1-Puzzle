@@ -7,10 +7,6 @@
 #include "verificacoes.h"
 #include "comandos.h"
 
-void resolver_jogo(Celula **tabuleiro, int linhas, int colunas);
-
-int resolve_jogo(int linhas, int colunas, PilhaAlteracoes *hist);
-
 int main(void){
     int linhas, colunas;
     PilhaAlteracoes historico;
@@ -55,7 +51,7 @@ int main(void){
         } else if (strcmp(comando, "A") == 0) {
             processar_comando_ajuda_repetida(&historico, linhas, colunas);
         } else if (strcmp(comando, "R") == 0) {
-            processar_comando_resolver_jogo(tabuleiro, linhas, colunas);
+            processar_comando_resolver_jogo(linhas, colunas);
         } else if (strcmp(comando, "d") == 0) {
             processar_comando_desfazer(&historico);
             printf("\nEstado após desfazer:\n");

@@ -9,8 +9,8 @@
 
 void mostrar_menu() {
     printf("\nComandos disponíveis:\n");
-    printf(" b <coord>   - Pintar casa de branco (ex: b a1)\n");
-    printf(" r <coord>   - Riscar casa (ex: r b2)\n");
+    printf(" b <coluna><linha> - Pintar casa de branco (ex: b a1)\n");
+    printf(" r <coluna><linha> - Riscar casa (ex: r b2)\n");
     printf(" a - Aplicar regras de ajuda uma vez\n");
     printf(" A - Aplicar ajuda até não haver mais alterações\n");
     printf(" R - Resolver o jogo automaticamente\n");
@@ -113,9 +113,8 @@ void processar_comando_verificar(int linhas, int colunas) {
 }
 
 void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas) {
-    printf("\nAplicando regras de ajuda...\n");
+    printf("\nAplicando regras de ajuda (uma passagem)...\n");
     int alteracoes = ajuda_automatica(linhas, colunas, historico);
-    
     if (alteracoes > 0) {
         printf("Realizadas %d alterações:\n", alteracoes);
         exibirTabuleiro(linhas, colunas);
@@ -127,49 +126,38 @@ void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas
 
 void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, int colunas) {
     printf("\nAplicando ajuda repetidamente...\n");
-    int total = 0;
-    int passos = 0;
-    
-    do {
-        int alteracoes = ajuda_automatica(linhas, colunas, historico);
-        if (alteracoes == 0) break;
-        
-        total += alteracoes;
-        passos++;
-        printf("Passo %d: %d alterações\n", passos, alteracoes);
-    } while (1);
-
-    printf("\nTotal de %d alterações em %d passos:\n", total, passos);
+    int total = ajuda_repetida(linhas, colunas, historico);
+    printf("\nTotal de %d alterações aplicando todas as regras até esgotar:\n", total);
     exibirTabuleiro(linhas, colunas);
     processar_comando_verificar(linhas, colunas);
 }
 
 void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colunas) {
     printf("\nIniciando resolução automática...\n");
-    
-    // Use temporary history to allow full undo if needed
     PilhaAlteracoes temp_hist;
     inicializarPilha(&temp_hist);
-    
-    int resultado = resolver_jogo(linhas, colunas, &temp_hist);
-    
-    // Transfer changes to main history
-    while (temp_hist.topo >= 0) {
-        AlteracaoTabuleiro alt = temp_hist.alteracoes[temp_hist.topo--];
+    int resultado = 0;
+    // Call backtracking resolver from verificacoes.c
+    resultado = resolver_jogo(linhas, colunas, &temp_hist);
+    // Transfere alterações para o histórico principal
+    for (int i = 0; i <= temp_hist.topo; i++) {
+        AlteracaoTabuleiro alt = temp_hist.alteracoes[i];
         empilhar(historico, alt.linha, alt.coluna, alt.valor_anterior, alt.valor_novo);
     }
-    
     if (resultado) {
         printf("Solução completa encontrada!\n");
     } else {
         printf("Solução parcial encontrada. Verifique violações remanescentes.\n");
     }
-    
     exibirTabuleiro(linhas, colunas);
     processar_comando_verificar(linhas, colunas);
     liberarPilha(&temp_hist);
 }
-void processar_comando_resolver_jogo(Celula **tabuleiro, int linhas, int colunas) {
+
+void processar_comando_resolver_jogo(int linhas, int colunas) {
     printf("Resolvendo o jogo...\n");
-    resolver_jogo(tabuleiro, linhas, colunas);
+    PilhaAlteracoes temp_hist;
+    inicializarPilha(&temp_hist);
+    resolver_jogo(linhas, colunas, &temp_hist);
+    liberarPilha(&temp_hist);
 }

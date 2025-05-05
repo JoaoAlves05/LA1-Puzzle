@@ -7,11 +7,12 @@ void test_comando_branco(void) {
     inicializarTabuleiro(3, 3);
     PilhaAlteracoes hist;
     inicializarPilha(&hist);
+    int linhas = 3, colunas = 3;
     
     // Simulate 'b a1' command
     tabuleiro[0][0].original = 'a';
     tabuleiro[0][0].atual = 'a';
-    processar_comando_branco(&hist, 3, 3);
+    processar_comando_branco(&hist, &linhas, &colunas);
     
     CU_ASSERT_EQUAL(tabuleiro[0][0].atual, 'A');
     CU_ASSERT_EQUAL(hist.topo, 0);
