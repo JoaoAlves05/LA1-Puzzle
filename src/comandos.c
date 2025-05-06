@@ -154,10 +154,47 @@ void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colu
     liberarPilha(&temp_hist);
 }
 
-void processar_comando_resolver_jogo(int linhas, int colunas) {
-    printf("Resolvendo o jogo...\n");
+void processar_comando_resolver_jogo(PilhaAlteracoes *historico, int linhas, int colunas) {
+    printf("\nIniciando resolução automática...\n");
+
+    // Reset current board state from original values
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            tabuleiro[i][j].atual = tabuleiro[i][j].original;
+        }
+    }
+
     PilhaAlteracoes temp_hist;
     inicializarPilha(&temp_hist);
-    resolver_jogo(linhas, colunas, &temp_hist);
+
+    // Apply logical deductions first
+    int total_alteracoes = ajuda_repetida(linhas, colunas, &temp_hist);
+    printf("Total de %d alterações aplicando regras até esgotar:\n", total_alteracoes);
+    exibirTabuleiro(linhas, colunas);
+
+    // Then apply backtracking solver to complete the solution
+    int resultado = resolver_jogo(linhas, colunas, &temp_hist);
+
+    // Transfer changes from temp_hist to main history stack
+    for (int i = 0; i <= temp_hist.topo; i++) {
+        AlteracaoTabuleiro alt = temp_hist.alteracoes[i];
+        empilhar(historico, alt.linha, alt.coluna, alt.valor_anterior, alt.valor_novo);
+    }
+
+    if (resultado) {
+        printf("Solução completa encontrada!\n");
+    } else {
+        printf("Solução parcial encontrada após backtracking. Verifique violações remanescentes.\n");
+    }
+
+    exibirTabuleiro(linhas, colunas);
+
+    int violacoes = contarTodasAsViolacoes(linhas, colunas);
+    if (violacoes == 0) {
+        printf("Tabuleiro válido! Sem violações.\n");
+    } else {
+        printf("Total de violações: %d\n", violacoes);
+    }
+
     liberarPilha(&temp_hist);
 }

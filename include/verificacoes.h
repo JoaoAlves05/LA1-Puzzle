@@ -7,6 +7,7 @@ int contarConectividade(int linhas, int colunas);
 int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist);
 int pintar_vizinhos_riscados(int linhas, int colunas, PilhaAlteracoes *hist);
 int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist);
+int riscar_casas_isoladas(int linhas, int colunas, PilhaAlteracoes *hist);
 int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist);
 int ajuda_repetida(int linhas, int colunas, PilhaAlteracoes *hist);
 int resolver_jogo(int linhas, int colunas, PilhaAlteracoes *hist);

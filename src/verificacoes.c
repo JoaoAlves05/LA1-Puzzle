@@ -179,6 +179,90 @@ int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist) {
     return alteracoes;
 }
 
+// Helper function to check if painting a cell white would isolate white cells
+int is_isolating(int i, int j, int linhas, int colunas) {
+    // Temporarily paint cell white
+    char original = tabuleiro[i][j].atual;
+    tabuleiro[i][j].atual = toupper(tabuleiro[i][j].original);
+
+    // Check connectivity
+    int isolated = contarConectividade(linhas, colunas);
+
+    // Restore original
+    tabuleiro[i][j].atual = original;
+
+    return isolated != 0;
+}
+
+// New rule: cross out cells that if painted white would isolate white cells
+int riscar_casas_isoladas(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int alteracoes = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            if (tabuleiro[i][j].atual != '#' && !isupper(tabuleiro[i][j].atual)) {
+                if (is_isolating(i, j, linhas, colunas)) {
+                    char ant = tabuleiro[i][j].atual;
+                    tabuleiro[i][j].atual = '#';
+                    if (hist) empilhar(hist, i, j, ant, '#');
+                    alteracoes++;
+                }
+            }
+        }
+    }
+    return alteracoes;
+}
+
+// New rule: cross out cells forced by adjacency of identical letters in rows or columns
+int riscar_forcados_por_adjacencia(int linhas, int colunas, PilhaAlteracoes *hist) {
+    int alteracoes = 0;
+    // Check rows for adjacent identical letters
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas - 1; j++) {
+            if (tabuleiro[i][j].atual != '#' && tabuleiro[i][j+1].atual != '#') {
+                char letra1 = tolower(tabuleiro[i][j].original);
+                char letra2 = tolower(tabuleiro[i][j+1].original);
+                if (letra1 == letra2) {
+                    // Cross out only one of the adjacent identical letters if not already crossed out
+                    if (!isupper(tabuleiro[i][j].atual) && isupper(tabuleiro[i][j+1].atual)) {
+                        char ant = tabuleiro[i][j].atual;
+                        tabuleiro[i][j].atual = '#';
+                        if (hist) empilhar(hist, i, j, ant, '#');
+                        alteracoes++;
+                    } else if (isupper(tabuleiro[i][j].atual) && !isupper(tabuleiro[i][j+1].atual)) {
+                        char ant = tabuleiro[i][j+1].atual;
+                        tabuleiro[i][j+1].atual = '#';
+                        if (hist) empilhar(hist, i, j+1, ant, '#');
+                        alteracoes++;
+                    }
+                }
+            }
+        }
+    }
+    // Check columns for adjacent identical letters
+    for (int j = 0; j < colunas; j++) {
+        for (int i = 0; i < linhas - 1; i++) {
+            if (tabuleiro[i][j].atual != '#' && tabuleiro[i+1][j].atual != '#') {
+                char letra1 = tolower(tabuleiro[i][j].original);
+                char letra2 = tolower(tabuleiro[i+1][j].original);
+                if (letra1 == letra2) {
+                    if (!isupper(tabuleiro[i][j].atual) && isupper(tabuleiro[i+1][j].atual)) {
+                        char ant = tabuleiro[i][j].atual;
+                        tabuleiro[i][j].atual = '#';
+                        if (hist) empilhar(hist, i, j, ant, '#');
+                        alteracoes++;
+                    } else if (isupper(tabuleiro[i][j].atual) && !isupper(tabuleiro[i+1][j].atual)) {
+                        char ant = tabuleiro[i+1][j].atual;
+                        tabuleiro[i+1][j].atual = '#';
+                        if (hist) empilhar(hist, i+1, j, ant, '#');
+                        alteracoes++;
+                    }
+                }
+            }
+        }
+    }
+    return alteracoes;
+}
+
 // Aplica as regras de ajuda a todas as casas possíveis, uma única passagem
 int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist) {
     int alteracoes = 0;
@@ -186,6 +270,8 @@ int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist) {
     alteracoes += pintar_replicas_unicas(linhas, colunas, hist);
     alteracoes += riscar_duplicados(linhas, colunas, hist);
     alteracoes += pintar_vizinhos_riscados(linhas, colunas, hist);
+    alteracoes += riscar_casas_isoladas(linhas, colunas, hist);
+    alteracoes += riscar_forcados_por_adjacencia(linhas, colunas, hist);
     return alteracoes;
 }
 
@@ -209,13 +295,13 @@ int resolver_jogo_backtrack(int linhas, int colunas, PilhaAlteracoes *hist) {
                 // 1. Tenta pintar de branco
                 tabuleiro[i][j].atual = toupper(tabuleiro[i][j].original);
                 if (hist) empilhar(hist, i, j, valor_ant, tabuleiro[i][j].atual);
-                if (resolver_jogo_backtrack(linhas, colunas, hist)) return 1;
+                if (contarConectividade(linhas, colunas) == 0 && resolver_jogo_backtrack(linhas, colunas, hist)) return 1;
                 if (hist) desfazer(hist);
                 tabuleiro[i][j].atual = valor_ant;
                 // 2. Tenta riscar
                 tabuleiro[i][j].atual = '#';
                 if (hist) empilhar(hist, i, j, valor_ant, '#');
-                if (resolver_jogo_backtrack(linhas, colunas, hist)) return 1;
+                if (contarConectividade(linhas, colunas) == 0 && resolver_jogo_backtrack(linhas, colunas, hist)) return 1;
                 if (hist) desfazer(hist);
                 tabuleiro[i][j].atual = valor_ant;
                 return 0;

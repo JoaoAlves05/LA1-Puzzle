@@ -51,7 +51,7 @@ int main(void){
         } else if (strcmp(comando, "A") == 0) {
             processar_comando_ajuda_repetida(&historico, linhas, colunas);
         } else if (strcmp(comando, "R") == 0) {
-            processar_comando_resolver_jogo(linhas, colunas);
+            processar_comando_resolver_jogo(&historico, linhas, colunas);
         } else if (strcmp(comando, "d") == 0) {
             processar_comando_desfazer(&historico);
             printf("\nEstado após desfazer:\n");
