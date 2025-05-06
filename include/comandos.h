@@ -13,4 +13,5 @@ void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas
 void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, int colunas);
 void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colunas);
 void processar_comando_resolver_jogo(PilhaAlteracoes *historico, int linhas, int colunas);
+void processar_comando_desfazer_tudo(PilhaAlteracoes *historico);
 #endif

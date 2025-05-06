@@ -55,8 +55,11 @@ int main(void){
         } else if (strcmp(comando, "d") == 0) {
             processar_comando_desfazer(&historico);
             printf("\nEstado após desfazer:\n");
-            exibirTabuleiro(linhas, colunas);
             printf("Violações: %d\n", contarTodasAsViolacoes(linhas, colunas));
+        } else if (strcmp(comando, "D") == 0) {
+                processar_comando_desfazer_tudo(&historico);
+                printf("\nEstado após desfazer:\n");
+                printf("Violações: %d\n", contarTodasAsViolacoes(linhas, colunas));
         } else if (strcmp(comando, "v") == 0) {
             processar_comando_verificar(linhas, colunas);
         } else if (strcmp(comando, "g") == 0) {

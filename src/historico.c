@@ -56,3 +56,17 @@ int desfazer(PilhaAlteracoes *p) {
     tabuleiro[alt.linha][alt.coluna].atual = alt.valor_anterior;
     return 1;
 }
+int desfazer_tudo(PilhaAlteracoes *p) {
+    if (p->capacidade == 0 || !p->alteracoes) {
+        fprintf(stderr, "Erro: pilha de alterações não inicializada.\n");
+        return 0;
+    }
+    if (p->topo < 0) {
+        fprintf(stderr, "Nenhum comando para desfazer.\n");
+        return 0;
+    }
+    while (p->topo >= 0) {
+        desfazer(p);
+    }
+    return 1;
+}

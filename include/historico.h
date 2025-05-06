@@ -19,5 +19,6 @@ void inicializarPilha(PilhaAlteracoes *p);
 void liberarPilha(PilhaAlteracoes *p);
 void empilhar(PilhaAlteracoes *p, int linha, int coluna, char valor_anterior, char valor_novo);
 int desfazer(PilhaAlteracoes *p);
+int desfazer_tudo(PilhaAlteracoes *p);
 
 #endif

@@ -17,6 +17,7 @@ void mostrar_menu() {
     printf(" g <arquivo> - Gravar estado atual do jogo\n");
     printf(" l <arquivo> - Carregar jogo de arquivo\n");
     printf(" d - Desfazer última alteração\n");
+    printf(" D - Desfazer todas as alterações\n");
     printf(" v - Verificar violações atuais\n");
     printf(" s - Sair\n");
 }
@@ -98,6 +99,10 @@ void processar_comando_desfazer(PilhaAlteracoes *historico) {
         printf("Nada para desfazer!\n");
     }
 }
+void processar_comando_desfazer_tudo(PilhaAlteracoes *historico) {
+    desfazer_tudo(historico);
+    printf("Todas as alterações desfeitas!\n");
+}
 
 void processar_comando_verificar(int linhas, int colunas) {
     int violacoes = contarTodasAsViolacoes(linhas, colunas);
@@ -117,7 +122,7 @@ void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas
     int alteracoes = ajuda_automatica(linhas, colunas, historico);
     if (alteracoes > 0) {
         printf("Realizadas %d alterações:\n", alteracoes);
-        exibirTabuleiro(linhas, colunas);
+      
         processar_comando_verificar(linhas, colunas);
     } else {
         printf("Nenhuma alteração possível com as regras atuais.\n");
@@ -128,7 +133,7 @@ void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, in
     printf("\nAplicando ajuda repetidamente...\n");
     int total = ajuda_repetida(linhas, colunas, historico);
     printf("\nTotal de %d alterações aplicando todas as regras até esgotar:\n", total);
-    exibirTabuleiro(linhas, colunas);
+    
     processar_comando_verificar(linhas, colunas);
 }
 
