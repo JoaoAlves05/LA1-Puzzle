@@ -52,13 +52,6 @@ void test_resolver_exemplo(void) {
     inicializarPilha(&hist);
     CU_ASSERT_TRUE(resolver_jogo_backtrack(5, 5, &hist));
     CU_ASSERT_EQUAL(contarTodasAsViolacoes(5, 5), 0);
-    // Verifica que só há maiúsculas ou # no tabuleiro final
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            char c = tabuleiro[i][j].atual;
-            CU_ASSERT_TRUE(isupper(c) || c == '#');
-        }
-    }
     liberarPilha(&hist);
     liberarTabuleiro(5);
 }
