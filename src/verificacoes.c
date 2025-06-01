@@ -6,10 +6,10 @@
 #include "verificacoes.h"
 #include "historico.h"
 
-// Direções ortogonais: cima, baixo, esquerda, direita
+// Vetor de direções ortogonais: cima, baixo, esquerda, direita
 const int D[4][2] = {{-1,0}, {1,0}, {0,-1}, {0,1}};
 
-// Função auxiliar: verifica se uma casa riscada tem vizinhos brancos
+// Função auxiliar: verifica se uma casa riscada tem pelo menos um vizinho branco (maiúscula)
 int check_vizinhos_validos(int i, int j, int linhas, int colunas) {
     for (int d = 0; d < 4; d++) {
         int ni = i + D[d][0], nj = j + D[d][1];
@@ -22,11 +22,12 @@ int check_vizinhos_validos(int i, int j, int linhas, int colunas) {
     return 0;
 }
 
+// Verifica se todas as casas brancas estão conectadas (não existem ilhas)
 int contarConectividade(int linhas, int colunas) {
     int total_brancas = 0;
     int start_i = -1, start_j = -1;
 
-    // Conta casas brancas (maiúsculas) e encontra a primeira
+    // Conta o número de casas brancas (maiúsculas) e encontra a primeira
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             if (isupper(tabuleiro[i][j].atual)) {
@@ -41,6 +42,7 @@ int contarConectividade(int linhas, int colunas) {
 
     if (total_brancas <= 1) return 0;
 
+    // Cria matriz de visitados para BFS
     int **visit = malloc(linhas * sizeof(int *));
     for (int i = 0; i < linhas; i++) {
         visit[i] = calloc(colunas, sizeof(int));
@@ -55,7 +57,7 @@ int contarConectividade(int linhas, int colunas) {
     queue[tail][1] = start_j;
     tail++;
 
-    // BFS para verificar se todas as casas brancas estão conectadas
+    // BFS para visitar todas as casas brancas conectadas
     while (head < tail) {
         int i = queue[head][0];
         int j = queue[head][1];
@@ -83,6 +85,7 @@ int contarConectividade(int linhas, int colunas) {
     return (count == total_brancas) ? 0 : 1;
 }
 
+// Risca casas duplicadas na mesma linha ou coluna
 int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist) {
     int alteracoes = 0;
     for (int i = 0; i < linhas; i++) {
@@ -91,7 +94,7 @@ int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist) {
             
             char letra = tolower(tabuleiro[i][j].atual);
             
-            // Verifica duplicados na linha
+            // Procura duplicados na linha
             for (int x = 0; x < colunas; x++) {
                 if (x != j && tolower(tabuleiro[i][x].atual) == letra) {
                     if (tabuleiro[i][x].atual != '#') {
@@ -103,7 +106,7 @@ int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist) {
                 }
             }
             
-            // Verifica duplicados na coluna
+            // Procura duplicados na coluna
             for (int y = 0; y < linhas; y++) {
                 if (y != i && tolower(tabuleiro[y][j].atual) == letra) {
                     if (tabuleiro[y][j].atual != '#') {
@@ -119,13 +122,13 @@ int riscar_duplicados(int linhas, int colunas, PilhaAlteracoes *hist) {
     return alteracoes;
 }
 
+// Pinta de branco casas vizinhas minúsculas de casas riscadas
 int pintar_vizinhos_riscados(int linhas, int colunas, PilhaAlteracoes *hist) {
     int alteracoes = 0;
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             if (tabuleiro[i][j].atual != '#') continue;
             
-            // Pinta de branco vizinhos minúsculos de casas riscadas
             for (int d = 0; d < 4; d++) {
                 int ni = i + D[d][0];
                 int nj = j + D[d][1];
@@ -144,6 +147,7 @@ int pintar_vizinhos_riscados(int linhas, int colunas, PilhaAlteracoes *hist) {
     return alteracoes;
 }
 
+// Pinta de branco casas que são a única possibilidade para uma letra numa linha ou coluna
 int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist) {
     int alteracoes = 0;
     for (int i = 0; i < linhas; i++) {
@@ -182,7 +186,7 @@ int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist) {
     return alteracoes;
 }
 
-// Função auxiliar: verifica se pintar uma casa de branco isola casas brancas
+// Verifica se pintar uma casa de branco isola casas brancas
 int is_isolating(int i, int j, int linhas, int colunas) {
     char original = tabuleiro[i][j].atual;
     tabuleiro[i][j].atual = toupper(tabuleiro[i][j].original);
@@ -263,10 +267,9 @@ int riscar_forcados_por_adjacencia(int linhas, int colunas, PilhaAlteracoes *his
     return alteracoes;
 }
 
-// Aplica as regras de ajuda a todas as casas possíveis, uma única passagem
+// Aplica todas as regras de ajuda ao tabuleiro numa única passagem
 int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist) {
     int alteracoes = 0;
-    // Aplica todas as regras de ajuda numa passagem
     alteracoes += pintar_replicas_unicas(linhas, colunas, hist);
     alteracoes += riscar_duplicados(linhas, colunas, hist);
     alteracoes += pintar_vizinhos_riscados(linhas, colunas, hist);
@@ -286,7 +289,7 @@ int ajuda_repetida(int linhas, int colunas, PilhaAlteracoes *hist) {
     return total;
 }
 
-// Resolução automática por backtracking exaustivo
+// Resolução automática do puzzle por backtracking exaustivo
 int resolver_jogo_backtrack(int linhas, int colunas, PilhaAlteracoes *hist) {
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
@@ -323,6 +326,7 @@ int resolver_jogo_backtrack(int linhas, int colunas, PilhaAlteracoes *hist) {
     return 0;
 }
 
+// Conta o número de casas riscadas sem vizinhos brancos
 int contarVizinhos(int linhas, int colunas) {
     int count = 0;
     for (int i = 0; i < linhas; i++) {
@@ -344,6 +348,7 @@ int contarVizinhos(int linhas, int colunas) {
     return count;
 }
 
+// Conta o número de duplicados (letras repetidas) em linhas e colunas
 int contarDuplicados(int linhas, int colunas) {
     int violacoes = 0;
     for (int i = 0; i < linhas; i++) {
@@ -367,6 +372,7 @@ int contarDuplicados(int linhas, int colunas) {
     return violacoes;
 }
 
+// Conta o número total de violações das regras do puzzle
 int contarTodasAsViolacoes(int linhas, int colunas) {
     return contarDuplicados(linhas, colunas)
          + contarVizinhos(linhas, colunas)

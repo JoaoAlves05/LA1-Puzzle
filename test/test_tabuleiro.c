@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include "historico.h"
 
+// Testa se a função input_coordenada aceita coordenadas válidas
 void test_input_coordenada_valida(void) {
     int l, c;
     CU_ASSERT_TRUE(input_coordenada("a1", &l, &c, 5, 5));
@@ -10,21 +11,23 @@ void test_input_coordenada_valida(void) {
     CU_ASSERT_EQUAL(c, 0);
 }
 
+// Testa se a função input_coordenada rejeita coordenadas inválidas
 void test_input_coordenada_invalida(void) {
     int l, c;
     CU_ASSERT_FALSE(input_coordenada("z9", &l, &c, 5, 5));
     CU_ASSERT_FALSE(input_coordenada("1a", &l, &c, 5, 5));
 }
 
+// Testa as funções de pintar e riscar casas
 void test_pintar_e_riscar(void) {
     inicializarTabuleiro(2, 2);
     tabuleiro[0][0].original = 'x';
     tabuleiro[0][0].atual    = 'x';
-    // pintar
+    // Testa pintar
     CU_ASSERT_TRUE(pintarDeBranco(0, 0));
     CU_ASSERT_TRUE(isupper(tabuleiro[0][0].atual));
     CU_ASSERT_FALSE(pintarDeBranco(0, 0));
-    // riscar
+    // Testa riscar
     tabuleiro[1][1].original = 'y';
     tabuleiro[1][1].atual    = 'y';
     CU_ASSERT_TRUE(riscarCasa(1, 1));
@@ -33,23 +36,24 @@ void test_pintar_e_riscar(void) {
     liberarTabuleiro(2);
 }
 
+// Testa pintar e riscar casas com histórico de alterações
 void test_pintar_e_riscar_com_historico(void) {
     PilhaAlteracoes h;
     inicializarPilha(&h);
     inicializarTabuleiro(2, 2);
     tabuleiro[0][0].original = 'x';
     tabuleiro[0][0].atual    = 'x';
-    // pintar
+    // Pintar
     char valor_ant = tabuleiro[0][0].atual;
     char valor_novo = toupper(tabuleiro[0][0].original);
     CU_ASSERT_TRUE(pintarDeBranco(0, 0));
     empilhar(&h, 0, 0, valor_ant, valor_novo);
     CU_ASSERT_TRUE(isupper(tabuleiro[0][0].atual));
     CU_ASSERT_FALSE(pintarDeBranco(0, 0));
-    // desfazer
+    // Desfazer pintura
     CU_ASSERT_TRUE(desfazer(&h));
     CU_ASSERT_EQUAL(tabuleiro[0][0].atual, 'x');
-    // riscar
+    // Riscar
     tabuleiro[1][1].original = 'y';
     tabuleiro[1][1].atual    = 'y';
     valor_ant = tabuleiro[1][1].atual;
@@ -58,13 +62,14 @@ void test_pintar_e_riscar_com_historico(void) {
     empilhar(&h, 1, 1, valor_ant, valor_novo);
     CU_ASSERT_EQUAL(tabuleiro[1][1].atual, '#');
     CU_ASSERT_FALSE(riscarCasa(1, 1));
-    // desfazer
+    // Desfazer riscar
     CU_ASSERT_TRUE(desfazer(&h));
     CU_ASSERT_EQUAL(tabuleiro[1][1].atual, 'y');
     liberarTabuleiro(2);
     liberarPilha(&h);
 }
 
+// Testa a leitura do tabuleiro de um ficheiro
 void test_lerTabuleiro(void) {
     // Cria um ficheiro temporário com um tabuleiro conhecido
     FILE *f = fopen("tab_temp.txt", "w");
@@ -106,6 +111,7 @@ void test_lerTabuleiro(void) {
     remove("tab_temp.txt");
 }
 
+// Função principal dos testes deste módulo
 int main(void) {
     CU_initialize_registry();
     CU_pSuite suite = CU_add_suite("TabuleiroSuite", NULL, NULL);

@@ -1,6 +1,7 @@
 #include <CUnit/Basic.h>
 #include "historico.h"
 
+// Testa empilhar e desfazer alterações no histórico
 void test_empilhar_desfazer(void) {
     PilhaAlteracoes h;
     inicializarPilha(&h);
@@ -16,6 +17,7 @@ void test_empilhar_desfazer(void) {
     liberarPilha(&h);
 }
 
+// Função principal dos testes deste módulo
 int main(void) {
     CU_initialize_registry();
     CU_pSuite suite = CU_add_suite("HistoricoSuite", NULL, NULL);
