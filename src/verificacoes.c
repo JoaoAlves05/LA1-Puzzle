@@ -249,34 +249,38 @@ int resolver_jogo_backtrack(int linhas, int colunas, PilhaAlteracoes *hist) {
     return tabuleiro_resolvido(linhas, colunas);
 }
 
-// Conta duplicados numa linha
+// Conta duplicados numa linha para cada letra do alfabeto
 int contarDuplicadosLinha(int linha, int colunas) {
+    int count[26] = {0};
     int violacoes = 0;
     for (int j = 0; j < colunas; j++) {
         if (isupper(tabuleiro[linha][j].atual)) {
-            char letra = tolower(tabuleiro[linha][j].atual);
-            for (int x = 0; x < colunas; x++) {
-                if (x != j && tolower(tabuleiro[linha][x].atual) == letra && isupper(tabuleiro[linha][x].atual)) {
-                    violacoes++;
-                }
+            int idx = tolower(tabuleiro[linha][j].atual) - 'a';
+            if (idx >= 0 && idx < 26) {
+                count[idx]++;
             }
         }
+    }
+    for (int i = 0; i < 26; i++) {
+        if (count[i] > 1) violacoes++;
     }
     return violacoes;
 }
 
-// Conta duplicados numa coluna
+// Conta duplicados numa coluna para cada letra do alfabeto
 int contarDuplicadosColuna(int linhas, int coluna) {
+    int count[26] = {0};
     int violacoes = 0;
     for (int i = 0; i < linhas; i++) {
         if (isupper(tabuleiro[i][coluna].atual)) {
-            char letra = tolower(tabuleiro[i][coluna].atual);
-            for (int y = 0; y < linhas; y++) {
-                if (y != i && tolower(tabuleiro[y][coluna].atual) == letra && isupper(tabuleiro[y][coluna].atual)) {
-                    violacoes++;
-                }
+            int idx = tolower(tabuleiro[i][coluna].atual) - 'a';
+            if (idx >= 0 && idx < 26) {
+                count[idx]++;
             }
         }
+    }
+    for (int i = 0; i < 26; i++) {
+        if (count[i] > 1) violacoes++;
     }
     return violacoes;
 }
