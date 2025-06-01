@@ -65,6 +65,47 @@ void test_pintar_e_riscar_com_historico(void) {
     liberarPilha(&h);
 }
 
+void test_lerTabuleiro(void) {
+    // Cria um ficheiro temporário com um tabuleiro conhecido
+    FILE *f = fopen("tab_temp.txt", "w");
+    fprintf(f, "2 2\nORIGINAL\nx y\ny x\nATUAL\nx y\ny x\n");
+    fclose(f);
+
+    int linhas = 2, colunas = 2;
+    inicializarTabuleiro(linhas, colunas);
+
+    f = fopen("tab_temp.txt", "r");
+    // Salta cabeçalho e separadores
+    int l, c;
+    if (fscanf(f, "%d %d", &l, &c) != 2) {
+        fclose(f);
+        CU_FAIL("Erro ao ler dimensões");
+        return;
+    }
+    char buf[20];
+    if (fscanf(f, "%s", buf) != 1) {
+        fclose(f);
+        CU_FAIL("Erro ao ler separador ORIGINAL");
+        return;
+    }
+    CU_ASSERT_TRUE(lerTabuleiro(f, linhas, colunas, 'O'));
+    if (fscanf(f, "%s", buf) != 1) {
+        fclose(f);
+        CU_FAIL("Erro ao ler separador ATUAL");
+        return;
+    }
+    CU_ASSERT_TRUE(lerTabuleiro(f, linhas, colunas, 'A'));
+    fclose(f);
+
+    // Verifica se os valores foram lidos corretamente
+    CU_ASSERT_EQUAL(tabuleiro[0][0].original, 'x');
+    CU_ASSERT_EQUAL(tabuleiro[1][1].original, 'x');
+    CU_ASSERT_EQUAL(tabuleiro[0][1].atual, 'y');
+
+    liberarTabuleiro(linhas);
+    remove("tab_temp.txt");
+}
+
 int main(void) {
     CU_initialize_registry();
     CU_pSuite suite = CU_add_suite("TabuleiroSuite", NULL, NULL);
@@ -72,6 +113,7 @@ int main(void) {
     CU_add_test(suite, "input invalida", test_input_coordenada_invalida);
     CU_add_test(suite, "pintar e riscar", test_pintar_e_riscar);
     CU_add_test(suite, "pintar/riscar com historico", test_pintar_e_riscar_com_historico);
+    CU_add_test(suite, "lerTabuleiro", test_lerTabuleiro);
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();

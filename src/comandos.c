@@ -143,7 +143,7 @@ void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colu
     inicializarPilha(&temp_hist);
     int resultado = 0;
     // Call backtracking resolver from verificacoes.c
-    resultado = resolver_jogo(linhas, colunas, &temp_hist);
+    resultado = resolver_jogo_backtrack(linhas, colunas, &temp_hist);
     // Transfere alterações para o histórico principal
     for (int i = 0; i <= temp_hist.topo; i++) {
         AlteracaoTabuleiro alt = temp_hist.alteracoes[i];
@@ -175,10 +175,9 @@ void processar_comando_resolver_jogo(PilhaAlteracoes *historico, int linhas, int
     // Apply logical deductions first
     int total_alteracoes = ajuda_repetida(linhas, colunas, &temp_hist);
     printf("Total de %d alterações aplicando regras até esgotar:\n", total_alteracoes);
-    exibirTabuleiro(linhas, colunas);
 
     // Then apply backtracking solver to complete the solution
-    int resultado = resolver_jogo(linhas, colunas, &temp_hist);
+    int resultado = resolver_jogo_backtrack(linhas, colunas, &temp_hist);
 
     // Transfer changes from temp_hist to main history stack
     for (int i = 0; i <= temp_hist.topo; i++) {

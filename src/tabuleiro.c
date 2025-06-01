@@ -145,11 +145,6 @@ int ler_dimensoes(FILE *arquivo, int *linhas, int *colunas) {
     return fscanf(arquivo, "%d %d", linhas, colunas) == 2 && *linhas > 0 && *colunas > 0;
 }
 
-// Função auxiliar para ler um tabuleiro
-int ler_tabuleiro_arquivo(FILE *arquivo, int linhas, int colunas, char tipo) {
-    return lerTabuleiro(arquivo, linhas, colunas, tipo);
-}
-
 void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
     FILE *arquivo = fopen(nomeArquivo, "r");
     if (!arquivo) {
@@ -170,7 +165,7 @@ void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
         fclose(arquivo);
         return;
     }
-    if (!ler_tabuleiro_arquivo(arquivo, *linhas, *colunas, 'O')) {
+    if (!lerTabuleiro(arquivo, *linhas, *colunas, 'O')) {
         fclose(arquivo);
         return;
     }
@@ -179,7 +174,7 @@ void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
         fclose(arquivo);
         return;
     }
-    if (!ler_tabuleiro_arquivo(arquivo, *linhas, *colunas, 'A')) {
+    if (!lerTabuleiro(arquivo, *linhas, *colunas, 'A')) {
         fclose(arquivo);
         return;
     }

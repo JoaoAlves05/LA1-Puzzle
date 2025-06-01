@@ -11,6 +11,7 @@ int main(void){
     int linhas, colunas;
     PilhaAlteracoes historico;
     char comando[10];
+    int saida = 0;
 
     inicializarPilha(&historico);
 
@@ -36,11 +37,14 @@ int main(void){
     }
     putchar('\n');
 
-    while (1) {
+    while (!saida) {
         exibirTabuleiro(linhas, colunas);
         mostrar_menu();
         printf("Digite um comando: ");
-        if (scanf("%s", comando) != 1) break;
+        if (scanf("%s", comando) != 1) {
+            saida = 1;
+            continue;
+        }
 
         if (strcmp(comando, "b") == 0) {
             processar_comando_branco(&historico, &linhas, &colunas);
@@ -57,9 +61,9 @@ int main(void){
             printf("\nEstado após desfazer:\n");
             printf("Violações: %d\n", contarTodasAsViolacoes(linhas, colunas));
         } else if (strcmp(comando, "D") == 0) {
-                processar_comando_desfazer_tudo(&historico);
-                printf("\nEstado após desfazer:\n");
-                printf("Violações: %d\n", contarTodasAsViolacoes(linhas, colunas));
+            processar_comando_desfazer_tudo(&historico);
+            printf("\nEstado após desfazer:\n");
+            printf("Violações: %d\n", contarTodasAsViolacoes(linhas, colunas));
         } else if (strcmp(comando, "v") == 0) {
             processar_comando_verificar(linhas, colunas);
         } else if (strcmp(comando, "g") == 0) {
@@ -72,7 +76,7 @@ int main(void){
             printf("Saindo...\n");
             liberarTabuleiro(linhas);
             liberarPilha(&historico);
-            break;
+            saida = 1;
         } else {
             printf("Comando invalido!\n");
         }

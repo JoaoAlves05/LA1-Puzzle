@@ -53,7 +53,7 @@ void test_resolver_exemplo(void) {
     PilhaAlteracoes hist;
     inicializarPilha(&hist);
     
-    CU_ASSERT_TRUE(resolver_jogo(5, 5, &hist));
+    CU_ASSERT_TRUE(resolver_jogo_backtrack(5, 5, &hist));
     CU_ASSERT_EQUAL(contarTodasAsViolacoes(5, 5), 0);
     
     // Verifica que só há maiúsculas ou # no tabuleiro final
