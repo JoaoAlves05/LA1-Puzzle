@@ -5,7 +5,7 @@
 // Ficheiro de cabeçalhos para os comandos do jogo (interface do utilizador).
 
 // Mostra o menu de comandos disponíveis.
-void mostrar_menu();
+void mostrar_menu(int linhas, int colunas);
 
 // Processa o comando para pintar uma casa de branco.
 void processar_comando_branco(PilhaAlteracoes *historico, int *linhas, int *colunas);

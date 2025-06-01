@@ -23,7 +23,7 @@ int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist);
 int riscar_casas_isoladas(int linhas, int colunas, PilhaAlteracoes *hist);
 
 // Aplica todas as regras de ajuda uma vez ao tabuleiro. Retorna o número de alterações feitas.
-int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist);
+// int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist);
 
 //Aplica as regras de ajuda repetidamente até não haver mais alterações. Retorna o número total de alterações feitas.
 int ajuda_repetida(int linhas, int colunas, PilhaAlteracoes *hist);
@@ -39,5 +39,8 @@ int contarTodasAsViolacoes(int linhas, int colunas);
 
 // Conta o número de duplicados (letras repetidas) em linhas e colunas.
 int contarDuplicados(int linhas, int colunas);
+
+// Aplica todas as regras de ajuda ao tabuleiro numa única passagem. Retorna o número de alterações feitas.
+int aplicar_todas_regras(int linhas, int colunas, PilhaAlteracoes *hist);
 
 #endif

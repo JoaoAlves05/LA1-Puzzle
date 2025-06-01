@@ -7,7 +7,7 @@
 #include "historico.h"
 
 // Inicializa o tabuleiro para testes, preenchendo com os dados fornecidos
-void init_tabuleiro_test(const char *data, int linhas, int colunas) {
+void init_tabuleiro_test(char *data, int linhas, int colunas) {
     if (strlen(data) != (size_t)(linhas * colunas)) {
         fprintf(stderr, "Dados de teste inválidos: esperados %d caracteres, recebidos %zu\n", 
                 linhas*colunas, strlen(data));
@@ -68,7 +68,7 @@ void test_ajuda_automatica(void) {
     init_tabuleiro_test("aabbc#", 2, 3);
     PilhaAlteracoes hist;
     inicializarPilha(&hist);
-    ajuda_automatica(2, 3, &hist);
+    aplicar_todas_regras(2, 3, &hist);
     CU_ASSERT_TRUE(tabuleiro[0][1].atual == '#');
     CU_ASSERT_TRUE(isupper(tabuleiro[0][0].atual));
     liberarPilha(&hist);

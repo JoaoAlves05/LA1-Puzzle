@@ -22,7 +22,7 @@ void test_comando_branco(void) {
 // Testa o comando de resolução automática
 void test_comando_resolver(void) {
     // Puzzle simples e resolúvel
-    const char *tab_ini = "abab";
+    char *tab_ini = "abab";
     inicializarTabuleiro(2, 2);
     for(int i=0; i<2; i++) {
         for(int j=0; j<2; j++) {

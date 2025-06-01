@@ -130,7 +130,7 @@ void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
 }
 
 // Procura uma linha separadora no ficheiro (ex: "ORIGINAL" ou "ATUAL")
-int procurar_separador(FILE *arquivo, const char *separador) {
+int procurar_separador(FILE *arquivo, char *separador) {
     char buffer[100];
     while (fgets(buffer, sizeof(buffer), arquivo)) {
         if (strstr(buffer, separador) != NULL) return 1;
@@ -150,14 +150,19 @@ void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
         fprintf(stderr, "Erro: Arquivo '%s' não encontrado.\n", nomeArquivo);
         return;
     }
-    if (!ler_dimensoes(arquivo, linhas, colunas)) {
+    int novas_linhas, novas_colunas;
+    if (!ler_dimensoes(arquivo, &novas_linhas, &novas_colunas)) {
         fprintf(stderr, "Erro: Formato inválido no cabeçalho do arquivo.\n");
         fclose(arquivo);
         return;
     }
+    // Liberta o tabuleiro antigo usando o número de linhas antigo
     if (tabuleiro != NULL) {
-        liberarTabuleiro(*linhas);
+        liberarTabuleiro(tabuleiro_linhas);
     }
+    // Atualiza as variáveis de linhas e colunas para os novos valores
+    *linhas = novas_linhas;
+    *colunas = novas_colunas;
     inicializarTabuleiro(*linhas, *colunas);
     if (!procurar_separador(arquivo, "ORIGINAL")) {
         fprintf(stderr, "Erro: Separador 'ORIGINAL' não encontrado.\n");

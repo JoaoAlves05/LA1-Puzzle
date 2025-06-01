@@ -8,10 +8,12 @@
 #include "comandos.h"
 
 // Mostra o menu de comandos disponíveis ao utilizador
-void mostrar_menu() {
+void mostrar_menu(int linhas, int colunas) {
+    char ultima_col = 'a' + colunas - 1;
+    int ultima_linha = linhas;
     printf("\nComandos disponíveis:\n");
-    printf(" b <coluna><linha> - Pintar casa de branco (ex: b a1)\n");
-    printf(" r <coluna><linha> - Riscar casa (ex: r b2)\n");
+    printf(" b <coluna><linha> - Pintar casa de branco (ex: b a1-%c%d)\n", ultima_col, ultima_linha);
+    printf(" r <coluna><linha> - Riscar casa (ex: r a1-%c%d)\n", ultima_col, ultima_linha);
     printf(" a - Aplicar regras de ajuda uma vez\n");
     printf(" A - Aplicar ajuda até não haver mais alterações\n");
     printf(" R - Resolver o jogo automaticamente\n");
@@ -129,7 +131,7 @@ void processar_comando_verificar(int linhas, int colunas) {
 // Processa o comando para aplicar as regras de ajuda uma vez
 void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas) {
     printf("\nAplicando regras de ajuda (uma passagem)...\n");
-    int alteracoes = ajuda_automatica(linhas, colunas, historico);
+    int alteracoes = aplicar_todas_regras(linhas, colunas, historico);
     if (alteracoes > 0) {
         printf("Realizadas %d alterações:\n", alteracoes);
         processar_comando_verificar(linhas, colunas);
@@ -148,7 +150,7 @@ void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, in
 
 // Processa o comando para resolver o puzzle automaticamente (apenas backtracking)
 void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colunas) {
-    printf("\nIniciando resolução automática...\n");
+    printf("\nIniciando resolução...\n");
     PilhaAlteracoes temp_hist;
     inicializarPilha(&temp_hist);
     int resultado = 0;
@@ -162,7 +164,7 @@ void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colu
     if (resultado) {
         printf("Solução completa encontrada!\n");
     } else {
-        printf("Solução parcial encontrada. Verifique violações remanescentes.\n");
+        printf("Solução parcial encontrada. Verifique violações restantes.\n");
     }
     exibirTabuleiro(linhas, colunas);
     processar_comando_verificar(linhas, colunas);
@@ -199,10 +201,8 @@ void processar_comando_resolver_jogo(PilhaAlteracoes *historico, int linhas, int
     if (resultado) {
         printf("Solução completa encontrada!\n");
     } else {
-        printf("Solução parcial encontrada após backtracking. Verifique violações remanescentes.\n");
+        printf("Solução parcial encontrada após backtracking. Verifique violações restantes.\n");
     }
-
-    exibirTabuleiro(linhas, colunas);
 
     int violacoes = contarTodasAsViolacoes(linhas, colunas);
     if (violacoes == 0) {

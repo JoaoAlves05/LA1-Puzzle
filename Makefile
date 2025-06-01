@@ -1,6 +1,3 @@
-# Makefile para compilar o projeto LA1-Puzzle e os seus testes.
-# Utiliza gcc e suporta AddressSanitizer para deteção de erros de memória.
-
 # Compilador e flags de compilação
 CC         = gcc
 CFLAGS     = -Wall -Wextra -pedantic -O1 -fsanitize=address -fno-omit-frame-pointer -g
@@ -11,12 +8,12 @@ SRC_DIR    = src
 INC_DIR    = include
 TEST_DIR   = test
 
-# Ficheiros fonte da aplicação principal
+# Ficheiros da aplicação principal
 SRCS       = $(SRC_DIR)/main.c $(SRC_DIR)/tabuleiro.c $(SRC_DIR)/historico.c $(SRC_DIR)/verificacoes.c $(SRC_DIR)/comandos.c
 OBJS       = $(SRCS:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 TARGET     = jogo
 
-# Ficheiros fonte e objetos dos testes
+# Ficheiros e objetos dos testes
 TEST_SRCS    = $(TEST_DIR)/test_tabuleiro.c $(TEST_DIR)/test_historico.c $(TEST_DIR)/test_verificacoes.c
 TEST_OBJS    = $(TEST_SRCS:$(TEST_DIR)/%.c=$(BUILD_DIR)/%.o)
 TEST_TARGETS = test_tabuleiro test_historico test_verificacoes
