@@ -11,8 +11,16 @@ int tabuleiro_linhas = 0;  // Número de linhas do tabuleiro
 // Inicializa o tabuleiro, alocando memória para as linhas e colunas
 void inicializarTabuleiro(int linhas, int colunas) {
     tabuleiro = malloc(linhas * sizeof(Celula *));
+    if (!tabuleiro) {
+        fprintf(stderr, "Erro: Falha ao alocar memória para o tabuleiro.\n");
+        exit(1);
+    }
     for (int i = 0; i < linhas; i++) {
         tabuleiro[i] = malloc(colunas * sizeof(Celula));
+        if (!tabuleiro[i]) {
+            fprintf(stderr, "Erro: Falha ao alocar memória para linha do tabuleiro.\n");
+            exit(1);
+        }
     }
     tabuleiro_linhas = linhas;
 }
@@ -43,14 +51,29 @@ int input_coordenada(char *coordenada, int *linha, int *coluna, int max_linhas, 
 
 // Mostra o tabuleiro atual no ecrã
 void exibirTabuleiro(int linhas, int colunas) {
-    printf("Tabuleiro atual:\n");
-    putchar('\n');
+    printf("\n   %s", ANSI_BOLD);
+    for (int j = 0; j < colunas; j++) {
+        printf("%c ", 'a' + j);
+    }
+    printf("%s\n", ANSI_RESET);
+    printf("   ");
+    for (int j = 0; j < colunas; j++) printf("--");
+    printf("-\n");
     for (int i = 0; i < linhas; i++) {
+        printf("%2d| ", i + 1);
         for (int j = 0; j < colunas; j++) {
-            printf("%c ", tabuleiro[i][j].atual);
+            char c = tabuleiro[i][j].atual;
+            if (c == '#') {
+                printf("%s#%s ", ANSI_RED, ANSI_RESET);
+            } else if (isupper(c)) {
+                printf("%s%c%s ", ANSI_GREEN, c, ANSI_RESET);
+            } else {
+                printf("%c ", c);
+            }
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 // Pinta uma casa de branco (maiúscula), se possível

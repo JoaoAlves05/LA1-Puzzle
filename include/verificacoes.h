@@ -22,16 +22,13 @@ int pintar_replicas_unicas(int linhas, int colunas, PilhaAlteracoes *hist);
 // Risca casas que, se fossem pintadas de branco, isolariam casas brancas. Retorna o número de alterações feitas.
 int riscar_casas_isoladas(int linhas, int colunas, PilhaAlteracoes *hist);
 
-// Aplica todas as regras de ajuda uma vez ao tabuleiro. Retorna o número de alterações feitas.
-// int ajuda_automatica(int linhas, int colunas, PilhaAlteracoes *hist);
-
 //Aplica as regras de ajuda repetidamente até não haver mais alterações. Retorna o número total de alterações feitas.
 int ajuda_repetida(int linhas, int colunas, PilhaAlteracoes *hist);
 
 // Resolve o puzzle usando backtracking exaustivo. Retorna 1 se encontrou solução válida, 0 caso contrário
 int resolver_jogo_backtrack(int linhas, int colunas, PilhaAlteracoes *hist);
 
-// Conta o número de casas riscadas sem vizinhos brancos.
+// Conta o número de casas riscadas que não têm vizinhos brancos (violação de vizinhança).
 int contarVizinhos(int linhas, int colunas);
 
 // Conta o número total de violações das regras do puzzle.

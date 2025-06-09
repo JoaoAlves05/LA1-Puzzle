@@ -345,7 +345,6 @@ int contarVizinhos(int linhas, int colunas) {
 int contarTodasAsViolacoes(int linhas, int colunas) {
     return contarDuplicados(linhas, colunas)
          + contarVizinhos(linhas, colunas)
-         + contarConectividade(linhas, colunas);         
          + contarConectividade(linhas, colunas);
 }
 

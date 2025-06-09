@@ -7,11 +7,16 @@
 #include "verificacoes.h"
 #include "comandos.h"
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 // Mostra o menu de comandos disponíveis ao utilizador
 void mostrar_menu(int linhas, int colunas) {
     char ultima_col = 'a' + colunas - 1;
     int ultima_linha = linhas;
-    printf("\nComandos disponíveis:\n");
+    printf("\n================ MENU ================\n");
     printf(" b <coluna><linha> - Pintar casa de branco (ex: b a1-%c%d)\n", ultima_col, ultima_linha);
     printf(" r <coluna><linha> - Riscar casa (ex: r a1-%c%d)\n", ultima_col, ultima_linha);
     printf(" a - Aplicar regras de ajuda uma vez\n");
@@ -23,6 +28,8 @@ void mostrar_menu(int linhas, int colunas) {
     printf(" D - Desfazer todas as alterações\n");
     printf(" v - Verificar violações atuais\n");
     printf(" s - Sair\n");
+    printf("======================================\n");
+    printf(" Sugestão: Use 'v' para verificar o estado do tabuleiro.\n");
 }
 
 // Processa o comando para pintar uma casa de branco
@@ -30,23 +37,23 @@ void processar_comando_branco(PilhaAlteracoes *historico, int *linhas, int *colu
     char coord[5];
     printf("Coordenada: ");
     if (scanf("%4s", coord) != 1) {
-        printf("Erro na leitura da coordenada!\n");
+        printf(ANSI_COLOR_RED "Erro na leitura da coordenada!\n" ANSI_COLOR_RESET);
         return;
     }
 
     int l, c;
     if (!input_coordenada(coord, &l, &c, *linhas, *colunas)) {
-        printf("Coordenada inválida!\n");
+        printf(ANSI_COLOR_RED "Coordenada inválida!\n" ANSI_COLOR_RESET);
         return;
     }
 
     char valor_ant = tabuleiro[l][c].atual;
     if (pintarDeBranco(l, c)) {
         empilhar(historico, l, c, valor_ant, tabuleiro[l][c].atual);
-        printf("Casa pintada de branco. Violações: %d\n", 
+        printf(ANSI_COLOR_GREEN "Casa pintada de branco. Violações: %d\n" ANSI_COLOR_RESET, 
               contarTodasAsViolacoes(*linhas, *colunas));
     } else {
-        printf("Não foi possível pintar a casa!\n");
+        printf(ANSI_COLOR_YELLOW "Não foi possível pintar a casa!\n" ANSI_COLOR_RESET);
     }
 }
 
@@ -55,23 +62,23 @@ void processar_comando_riscar(PilhaAlteracoes *historico, int *linhas, int *colu
     char coord[5];
     printf("Coordenada: ");
     if (scanf("%4s", coord) != 1) {
-        printf("Erro na leitura da coordenada!\n");
+        printf(ANSI_COLOR_RED "Erro na leitura da coordenada!\n" ANSI_COLOR_RESET);
         return;
     }
 
     int l, c;
     if (!input_coordenada(coord, &l, &c, *linhas, *colunas)) {
-        printf("Coordenada inválida!\n");
+        printf(ANSI_COLOR_RED "Coordenada inválida!\n" ANSI_COLOR_RESET);
         return;
     }
 
     char valor_ant = tabuleiro[l][c].atual;
     if (riscarCasa(l, c)) {
         empilhar(historico, l, c, valor_ant, '#');
-        printf("Casa riscada. Violações: %d\n", 
+        printf(ANSI_COLOR_GREEN "Casa riscada. Violações: %d\n" ANSI_COLOR_RESET, 
               contarTodasAsViolacoes(*linhas, *colunas));
     } else {
-        printf("Não foi possível riscar a casa!\n");
+        printf(ANSI_COLOR_YELLOW "Não foi possível riscar a casa!\n" ANSI_COLOR_RESET);
     }
 }
 
@@ -80,11 +87,10 @@ void processar_comando_gravar(int linhas, int colunas) {
     char nome[50];
     printf("Nome do arquivo para gravar: ");
     if (scanf("%49s", nome) != 1) {
-        printf("Erro no nome do arquivo!\n");
+        printf(ANSI_COLOR_RED "Erro no nome do arquivo!\n" ANSI_COLOR_RESET);
         return;
     }
     gravarJogo(nome, linhas, colunas);
-    printf("Jogo gravado com sucesso!\n");
 }
 
 // Processa o comando para carregar o estado do jogo de um ficheiro
@@ -92,39 +98,38 @@ void processar_comando_carregar(int *linhas, int *colunas) {
     char nome[50];
     printf("Nome do arquivo para carregar: ");
     if (scanf("%49s", nome) != 1) {
-        printf("Erro no nome do arquivo!\n");
+        printf(ANSI_COLOR_RED "Erro no nome do arquivo!\n" ANSI_COLOR_RESET);
         return;
     }
     carregarJogo(nome, linhas, colunas);
-    printf("Jogo carregado com sucesso!\n");
 }
 
 // Processa o comando para desfazer a última alteração
 void processar_comando_desfazer(PilhaAlteracoes *historico) {
     if (desfazer(historico)) {
-        printf("Última alteração desfeita!\n");
+        printf(ANSI_COLOR_GREEN "Última alteração desfeita!\n" ANSI_COLOR_RESET);
     } else {
-        printf("Nada para desfazer!\n");
+        printf(ANSI_COLOR_YELLOW "Nada para desfazer!\n" ANSI_COLOR_RESET);
     }
 }
 
 // Processa o comando para desfazer todas as alterações
 void processar_comando_desfazer_tudo(PilhaAlteracoes *historico) {
     desfazer_tudo(historico);
-    printf("Todas as alterações desfeitas!\n");
+    printf(ANSI_COLOR_GREEN "Todas as alterações desfeitas!\n" ANSI_COLOR_RESET);
 }
 
 // Processa o comando para verificar violações no tabuleiro
 void processar_comando_verificar(int linhas, int colunas) {
     int violacoes = contarTodasAsViolacoes(linhas, colunas);
     if (violacoes == 0) {
-        printf("Tabuleiro válido! Sem violações.\n");
+        printf(ANSI_COLOR_GREEN "Tabuleiro válido! Sem violações.\n" ANSI_COLOR_RESET);
     } else {
-        printf("Violações encontradas:\n");
+        printf(ANSI_COLOR_RED "Violações encontradas:\n" ANSI_COLOR_RESET);
         printf(" - Duplicados: %d\n", contarDuplicados(linhas, colunas));
         printf(" - Vizinhos inválidos: %d\n", contarVizinhos(linhas, colunas));
         printf(" - Conectividade: %d\n", contarConectividade(linhas, colunas));
-        printf("Total de violações: %d\n", violacoes);
+        printf(ANSI_COLOR_RED "Total de violações: %d\n" ANSI_COLOR_RESET, violacoes);
     }
 }
 

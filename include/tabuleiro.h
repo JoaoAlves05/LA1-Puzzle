@@ -44,4 +44,19 @@ void escreverTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo);
 // Lê o tabuleiro de um ficheiro (auxiliar).
 int lerTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo);
 
+// Macros para cores ANSI
+#define ANSI_RESET   "\033[0m"
+#define ANSI_RED     "\033[31m"
+#define ANSI_GREEN   "\033[32m"
+#define ANSI_YELLOW  "\033[33m"
+#define ANSI_BLUE    "\033[34m"
+#define ANSI_CYAN    "\033[36m"
+#define ANSI_BOLD    "\033[1m"
+
+// Funções auxiliares de interface
+void clear_screen(void);
+void pause_enter(const char *msg);
+int ler_linha(char *buffer, int max);
+void ascii_art(void);
+
 #endif

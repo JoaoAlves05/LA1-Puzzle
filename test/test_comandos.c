@@ -1,22 +1,35 @@
 #include <CUnit/Basic.h>
 #include "comandos.h"
+#include "verificacoes.h"
 #include "tabuleiro.h"
 #include "historico.h"
 
+// Implementação auxiliar para inicializar o tabuleiro de teste
+void init_tabuleiro_test(const char *str, int linhas, int colunas) {
+    inicializarTabuleiro(linhas, colunas);
+    int idx = 0;
+    for (int i = 0; i < linhas; i++) {
+        for (int j = 0; j < colunas; j++) {
+            tabuleiro[i][j].original = str[idx];
+            tabuleiro[i][j].atual = str[idx];
+            idx++;
+        }
+    }
+}
+
 // Testa o comando de pintar uma casa de branco
 void test_comando_branco(void) {
-    inicializarTabuleiro(3, 3);
     PilhaAlteracoes hist;
     inicializarPilha(&hist);
-    int linhas = 3, colunas = 3;
-    // Simula o comando 'b a1'
+    int linhas = 2, colunas = 2;
+    inicializarTabuleiro(linhas, colunas);
     tabuleiro[0][0].original = 'a';
     tabuleiro[0][0].atual = 'a';
     processar_comando_branco(&hist, &linhas, &colunas);
     CU_ASSERT_EQUAL(tabuleiro[0][0].atual, 'A');
     CU_ASSERT_EQUAL(hist.topo, 0);
     liberarPilha(&hist);
-    liberarTabuleiro(3);
+    liberarTabuleiro(linhas);
 }
 
 // Testa o comando de resolução automática
@@ -59,7 +72,8 @@ void test_comando_desfazer(void) {
     inicializarPilha(&hist);
     // Faz e desfaz uma alteração
     tabuleiro[0][0].original = 'a';
-    processar_comando_branco(&hist, 1, 1);
+    int linhas = 1, colunas = 1;
+    processar_comando_branco(&hist, &linhas, &colunas);
     processar_comando_desfazer(&hist);
     CU_ASSERT_EQUAL(tabuleiro[0][0].atual, 'a');
     liberarPilha(&hist);
@@ -69,7 +83,7 @@ void test_comando_desfazer(void) {
 // Função principal dos testes deste módulo
 int main(void) {
     CU_initialize_registry();
-    CU_pSuite suite = CU_add_suite("Command Tests", NULL, NULL);
+    CU_pSuite suite = CU_add_suite("Comandos", 0, 0);
 
     CU_add_test(suite, "Pintar Branco", test_comando_branco);
     CU_add_test(suite, "Resolver", test_comando_resolver);

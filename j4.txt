@@ -1,0 +1,13 @@
+5 5
+ORIGINAL
+bbecc
+eccbd
+bcdcb
+cdbda
+abcdb
+ATUAL
+bbecc
+eccbd
+bcdcb
+cdbda
+abcdb
