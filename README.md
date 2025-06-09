@@ -6,7 +6,7 @@
 
 ---
 
-## Como compilar e jogar
+## 🚀 Como compilar e jogar
 
 ```sh
 make puzzle      # Compila o jogo principal
@@ -18,21 +18,21 @@ make tests       # Compila todos os testes (ficheiros em test/)
 
 ---
 
-## Como funciona
+## 🧩 Como funciona
 
 Ao iniciar o programa, é apresentado um menu inicial:
 
 - **1** - Novo jogo (inserir tabuleiro manualmente)
-- **2** - Carregar jogo de ficheiro
+- **2** - Carregar jogo de ficheiro (a partir da pasta `saved/`)
 - **0** - Sair
 
 Se escolher "Novo jogo", pode inserir o tabuleiro linha a linha ou colar todas as linhas de uma vez.  
-Se escolher "Carregar", o programa lê um ficheiro no formato esperado (com separadores `ORIGINAL` e `ATUAL`).  
+Se escolher "Carregar", o programa lê um ficheiro do diretório `saved/` no formato esperado (com separadores `ORIGINAL` e `ATUAL`).  
 Se houver erro ao carregar, volta ao menu inicial.
 
 ---
 
-## Exemplo de arranque
+## 🎮 Exemplo de arranque
 
 ```text
 ========================================
@@ -67,11 +67,17 @@ Linha 3: ijklm
 Linha 4: nopqr
 
 Tabuleiro inicial inserido com sucesso!
+
+Tabuleiro inserido:
+  1: abcd#
+  2: aefgh
+  3: ijklm
+  4: nopqr
 ```
 
 ---
 
-## Interface colorida
+## 🎨 Interface colorida
 
 - Casas riscadas: **vermelho**
 - Casas brancas: **verde**
@@ -81,15 +87,15 @@ Tabuleiro inicial inserido com sucesso!
 
 ---
 
-## Comandos disponíveis durante o jogo
+## 🕹️ Comandos disponíveis durante o jogo
 
 - `b <coord>`: Pintar casa de branco (ex: b a1)
 - `r <coord>`: Riscar casa (ex: r b2)
 - `a`: Aplicar regras de ajuda uma vez
 - `A`: Aplicar ajuda até não haver mais alterações
 - `R`: Resolver o puzzle automaticamente (reset ao original + resolver)
-- `g <ficheiro>`: Gravar estado atual (ficheiro no diretório atual)
-- `l <ficheiro>`: Carregar jogo de ficheiro (ficheiro no diretório atual)
+- `g <ficheiro>`: Gravar estado atual (ficheiro guardado em `saved/`)
+- `l <ficheiro>`: Carregar jogo de ficheiro (ficheiro lido de `saved/`)
 - `d`: Desfazer última alteração
 - `D`: Desfazer todas as alterações feitas desde o início
 - `v`: Verificar violações atuais
@@ -97,23 +103,26 @@ Tabuleiro inicial inserido com sucesso!
 
 ---
 
-## Dicas e funcionalidades
+## 💡 Dicas e funcionalidades
 
 - Pode inserir o tabuleiro linha a linha, colar várias linhas de uma vez, ou corrigir linhas antes de confirmar.
 - O comando `D` desfaz todas as alterações feitas desde o início, voltando ao estado original do tabuleiro.
 - O comando `R` resolve o puzzle automaticamente, começando sempre do tabuleiro original.
+- Todos os jogos gravados e carregados são guardados na pasta `saved/`.
 - O código valida todos os inputs e exibe mensagens claras.
 - Os testes automáticos devem ser colocados em ficheiros `.c` dentro da pasta `test/` e são compilados para `build/`.
 
 ---
 
-## Estrutura dos ficheiros de jogo
+## 📁 Estrutura dos ficheiros de jogo
 
 Os ficheiros de jogo guardam:
 
 - Dimensões do tabuleiro
 - Secção `ORIGINAL` (tabuleiro inicial)
 - Secção `ATUAL` (estado atual)
+
+Exemplo de ficheiro em `saved/`:
 
 ```text
 4 5
@@ -131,10 +140,18 @@ n o p q r
 
 ---
 
-## Licença
+## 🧪 Testes
+
+- Os testes usam [CUnit](https://cunit.sourceforge.net/).
+- Para adicionar novos testes, crie ficheiros `.c` em `test/`.
+- Use `make tests` para compilar todos os testes.
+
+---
+
+## 📜 Licença
 
 MIT
 
 ---
 
-Desenvolvido com 💚 por um expert em C eheheh!
+Desenvolvido com 💚 por João Alves.
