@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 // Definição do tabuleiro global
 Celula **tabuleiro = NULL; // Ponteiro para a matriz do tabuleiro
@@ -138,9 +140,17 @@ int lerTabuleiro(FILE *arquivo, int linhas, int colunas, char tipo) {
 
 // Grava o estado do jogo num ficheiro, incluindo original e atual
 void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
-    FILE *arquivo = fopen(nomeArquivo, "w");
+    // Garante que o diretório 'saved' existe
+    struct stat st = {0};
+    if (stat("saved", &st) == -1) {
+        mkdir("saved", 0700);
+    }
+    char caminho[256];
+    snprintf(caminho, sizeof(caminho), "saved/%s", nomeArquivo);
+
+    FILE *arquivo = fopen(caminho, "w");
     if (!arquivo) {
-        fprintf(stderr, "Erro: Não foi possível criar o arquivo '%s'.\n", nomeArquivo);
+        fprintf(stderr, "Erro: Não foi possível criar o arquivo '%s'.\n", caminho);
         return;
     }
     fprintf(arquivo, "%d %d\n", linhas, colunas);
@@ -149,7 +159,7 @@ void gravarJogo(char *nomeArquivo, int linhas, int colunas) {
     fprintf(arquivo, "ATUAL\n");
     escreverTabuleiro(arquivo, linhas, colunas, 'A');
     fclose(arquivo);
-    printf("Jogo gravado com sucesso em '%s'.\n", nomeArquivo);
+    printf("Jogo gravado com sucesso em '%s'.\n", caminho);
 }
 
 // Procura uma linha separadora no ficheiro (ex: "ORIGINAL" ou "ATUAL")
@@ -168,9 +178,12 @@ int ler_dimensoes(FILE *arquivo, int *linhas, int *colunas) {
 
 // Carrega o estado do jogo de um ficheiro, preenchendo o tabuleiro
 void carregarJogo(char *nomeArquivo, int *linhas, int *colunas) {
-    FILE *arquivo = fopen(nomeArquivo, "r");
+    char caminho[256];
+    snprintf(caminho, sizeof(caminho), "saved/%s", nomeArquivo);
+
+    FILE *arquivo = fopen(caminho, "r");
     if (!arquivo) {
-        fprintf(stderr, "Erro: Arquivo '%s' não encontrado.\n", nomeArquivo);
+        fprintf(stderr, "Erro: Arquivo '%s' não encontrado.\n", caminho);
         return;
     }
     int novas_linhas, novas_colunas;

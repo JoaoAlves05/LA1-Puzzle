@@ -273,6 +273,7 @@ int main(void){
     char comando[16];
     int saida = 0;
 
+    // Imprime o banner e mensagem de boas-vindas apenas uma vez no início
     clear_screen();
     ascii_art();
     printf(ANSI_BOLD ANSI_GREEN "Bem-vindo ao Puzzle das Letras!\n" ANSI_RESET);
@@ -280,10 +281,11 @@ int main(void){
 
     int opcao;
     do {
-        clear_screen();
-        ascii_art();
-        printf(ANSI_BOLD ANSI_GREEN "Bem-vindo ao Puzzle das Letras!\n" ANSI_RESET);
-        printf("Desenvolvido por um verdadeiro expert em C!\n\n");
+        // Remova estas linhas do ciclo:
+        // clear_screen();
+        // ascii_art();
+        // printf(ANSI_BOLD ANSI_GREEN "Bem-vindo ao Puzzle das Letras!\n" ANSI_RESET);
+        // printf("Desenvolvido por um verdadeiro expert em C!\n\n");
 
         opcao = menu_inicial();
         if (opcao == 0) {
@@ -296,7 +298,7 @@ int main(void){
         if (opcao == 2) {
             // Carregar de ficheiro
             char nome[128];
-            printf("Nome do ficheiro para carregar: ");
+            printf("Nome do ficheiro para carregar (apenas o nome, sem 'saved/'): ");
             if (scanf("%127s", nome) != 1) {
                 printf(ANSI_RED "Erro ao ler nome do ficheiro!\n" ANSI_RESET);
                 while (getchar() != '\n');
@@ -304,9 +306,11 @@ int main(void){
                 pause_enter("Prima ENTER para voltar ao menu inicial...");
                 continue;
             }
-            FILE *arquivo = fopen(nome, "r");
+            char caminho[256];
+            snprintf(caminho, sizeof(caminho), "saved/%s", nome);
+            FILE *arquivo = fopen(caminho, "r");
             if (!arquivo) {
-                printf(ANSI_RED "Erro: Arquivo '%s' não encontrado.\n" ANSI_RESET, nome);
+                printf(ANSI_RED "Erro: Arquivo '%s' não encontrado.\n" ANSI_RESET, caminho);
                 liberarPilha(&historico);
                 pause_enter("Prima ENTER para voltar ao menu inicial...");
                 continue;
@@ -390,7 +394,7 @@ int main(void){
                 pause_enter("Prima ENTER para voltar ao menu inicial...");
                 continue;
             }
-            printf(ANSI_GREEN "Jogo carregado com sucesso de '%s'.\n" ANSI_RESET, nome);
+            printf(ANSI_GREEN "Jogo carregado com sucesso de '%s'.\n" ANSI_RESET, caminho);
             break;
         } else if (opcao == 1) {
             // Novo jogo: pedir linhas/colunas e tabuleiro
