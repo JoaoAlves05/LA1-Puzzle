@@ -7,28 +7,35 @@
 ## Como compilar e jogar
 
 ```sh
-make all      # Compila o jogo e os testes
-./puzzle      # Inicia o jogo
-make tests    # Compila os testes (binário: tests/testes)
-./tests/testes # Corre os testes (se existirem)
+make puzzle      # Compila o jogo principal
+./puzzle         # Inicia o jogo
+
+make tests       # Compila todos os testes (ficheiros em test/)
+./build/test_nome # Corre cada teste individualmente (exemplo: ./build/test_comandos)
 ```
 
-### Exemplo de arranque
+## Exemplo de arranque
 
 ```
-   ========================================
-    _____  _    _  _______  _______ __     ______ 
-   | __ \\| |  | ||___   / |___   /|  |   |  ____|
-   | |__) | |  | |   /  /     /  / |  |   | |__   
-   |  ___/| |  | |  /  /     /  /  |  |   |  __|  
-   | |    | |__| | /  /___  /  /__ |  |___| |____ 
-   |_|    \\____/ |_______||______||______|______|
-   
-                D A S   L E T R A S  
-    =============================================
+========================================
+  _____  _    _  _______  _______ __     ______ 
+ |  __ \| |  | ||___   / |___   /|  |   |  ____|
+ | |__) | |  | |   /  /     /  / |  |   | |__   
+ |  ___/| |  | |  /  /     /  /  |  |   |  __|  
+ | |    | |__| | /  /___  /  /__ |  |___| |____ 
+ |_|     \____/ |_______||______||______|______|
+
+        D A S   L E T R A S                  
+========================================
 Bem-vindo ao Puzzle das Letras!
 Desenvolvido por um verdadeiro expert em C!
 
+======= MENU INICIAL =======
+1 - Novo jogo (inserir tabuleiro manualmente)
+2 - Carregar jogo de ficheiro
+0 - Sair
+============================
+Escolha uma opção: 1
 Quantas linhas e colunas terá o tabuleiro? (ex: 5 7)
 Linhas (1-26): 4
 Colunas (1-26): 5
@@ -45,7 +52,7 @@ Tabuleiro inicial inserido com sucesso!
 Prima ENTER para começar o jogo...
 ```
 
-### Interface colorida
+## Interface colorida
 
 - Casas riscadas: **vermelho**
 - Casas brancas: **verde**
@@ -53,7 +60,7 @@ Prima ENTER para começar o jogo...
 - Mensagens de sucesso: **verde**
 - Menus e prompts destacados
 
-### Comandos disponíveis
+## Comandos disponíveis durante o jogo
 
 - `b <coord>`: Pintar casa de branco (ex: b a1)
 - `r <coord>`: Riscar casa (ex: r b2)
@@ -67,10 +74,19 @@ Prima ENTER para começar o jogo...
 - `v`: Verificar violações atuais
 - `s`: Sair
 
-### Dicas
+## Dicas
 
 - Pode inserir o tabuleiro linha a linha, com feedback imediato.
 - O comando `D` desfaz todas as alterações feitas desde o início, mas não faz reset puro ao tabuleiro original (para isso, implemente um comando `reset`).
 - O código é robusto, validando todos os inputs e exibindo mensagens claras.
+- Os testes automáticos devem ser colocados em ficheiros `.c` dentro da pasta `test/` e são compilados para `build/`.
 
 ---
+
+## Licença
+
+MIT
+
+---
+
+Desenvolvido com 💚 por um expert em C!

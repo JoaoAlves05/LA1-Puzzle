@@ -7,29 +7,24 @@
 #include "verificacoes.h"
 #include "comandos.h"
 
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_GREEN   "\x1b[32m"
-#define ANSI_COLOR_YELLOW  "\x1b[33m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
-
 // Mostra o menu de comandos disponíveis ao utilizador
 void mostrar_menu(int linhas, int colunas) {
     char ultima_col = 'a' + colunas - 1;
     int ultima_linha = linhas;
-    printf("\n================ MENU ================\n");
-    printf(" b <coluna><linha> - Pintar casa de branco (ex: b a1-%c%d)\n", ultima_col, ultima_linha);
-    printf(" r <coluna><linha> - Riscar casa (ex: r a1-%c%d)\n", ultima_col, ultima_linha);
-    printf(" a - Aplicar regras de ajuda uma vez\n");
-    printf(" A - Aplicar ajuda até não haver mais alterações\n");
-    printf(" R - Resolver o jogo automaticamente\n");
-    printf(" g <arquivo> - Gravar estado atual do jogo\n");
-    printf(" l <arquivo> - Carregar jogo de arquivo\n");
-    printf(" d - Desfazer última alteração\n");
-    printf(" D - Desfazer todas as alterações\n");
-    printf(" v - Verificar violações atuais\n");
-    printf(" s - Sair\n");
-    printf("======================================\n");
-    printf(" Sugestão: Use 'v' para verificar o estado do tabuleiro.\n");
+    printf(ANSI_BOLD ANSI_CYAN "=== MENU DE JOGO ===\n" ANSI_RESET);
+    printf(ANSI_YELLOW "Comandos disponíveis:\n" ANSI_RESET);
+    printf(ANSI_BOLD " b <coluna><linha>" ANSI_RESET " - Pintar casa de branco   (ex: b a1-%c%d)\n", ultima_col, ultima_linha);
+    printf(ANSI_BOLD " r <coluna><linha>" ANSI_RESET " - Riscar casa            (ex: r a1-%c%d)\n", ultima_col, ultima_linha);
+    printf(ANSI_BOLD " a" ANSI_RESET " - Aplicar regras de ajuda uma vez\n");
+    printf(ANSI_BOLD " A" ANSI_RESET " - Aplicar ajuda até não haver alterações\n");
+    printf(ANSI_BOLD " R" ANSI_RESET " - Resolver o jogo automaticamente\n");
+    printf(ANSI_BOLD " g <arquivo>" ANSI_RESET " - Gravar estado atual do jogo\n");
+    printf(ANSI_BOLD " l <arquivo>" ANSI_RESET " - Carregar jogo de arquivo\n");
+    printf(ANSI_BOLD " d" ANSI_RESET " - Desfazer última alteração\n");
+    printf(ANSI_BOLD " D" ANSI_RESET " - Desfazer todas as alterações\n");
+    printf(ANSI_BOLD " v" ANSI_RESET " - Verificar violações atuais\n");
+    printf(ANSI_BOLD " s" ANSI_RESET " - Sair\n");
+    printf(ANSI_YELLOW "Dica: Use 'v' para verificar o estado do tabuleiro.\n" ANSI_RESET);
 }
 
 // Processa o comando para pintar uma casa de branco
@@ -37,23 +32,22 @@ void processar_comando_branco(PilhaAlteracoes *historico, int *linhas, int *colu
     char coord[5];
     printf("Coordenada: ");
     if (scanf("%4s", coord) != 1) {
-        printf(ANSI_COLOR_RED "Erro na leitura da coordenada!\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Erro: leitura inválida da coordenada!\n" ANSI_RESET);
+        while (getchar() != '\n');
         return;
     }
-
     int l, c;
     if (!input_coordenada(coord, &l, &c, *linhas, *colunas)) {
-        printf(ANSI_COLOR_RED "Coordenada inválida!\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Coordenada inválida!\n" ANSI_RESET);
         return;
     }
-
     char valor_ant = tabuleiro[l][c].atual;
     if (pintarDeBranco(l, c)) {
         empilhar(historico, l, c, valor_ant, tabuleiro[l][c].atual);
-        printf(ANSI_COLOR_GREEN "Casa pintada de branco. Violações: %d\n" ANSI_COLOR_RESET, 
+        printf(ANSI_GREEN "Casa pintada de branco. Violações: %d\n" ANSI_RESET, 
               contarTodasAsViolacoes(*linhas, *colunas));
     } else {
-        printf(ANSI_COLOR_YELLOW "Não foi possível pintar a casa!\n" ANSI_COLOR_RESET);
+        printf(ANSI_YELLOW "Não foi possível pintar a casa (já está branca ou riscada).\n" ANSI_RESET);
     }
 }
 
@@ -62,23 +56,22 @@ void processar_comando_riscar(PilhaAlteracoes *historico, int *linhas, int *colu
     char coord[5];
     printf("Coordenada: ");
     if (scanf("%4s", coord) != 1) {
-        printf(ANSI_COLOR_RED "Erro na leitura da coordenada!\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Erro: leitura inválida da coordenada!\n" ANSI_RESET);
+        while (getchar() != '\n');
         return;
     }
-
     int l, c;
     if (!input_coordenada(coord, &l, &c, *linhas, *colunas)) {
-        printf(ANSI_COLOR_RED "Coordenada inválida!\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Coordenada inválida!\n" ANSI_RESET);
         return;
     }
-
     char valor_ant = tabuleiro[l][c].atual;
     if (riscarCasa(l, c)) {
         empilhar(historico, l, c, valor_ant, '#');
-        printf(ANSI_COLOR_GREEN "Casa riscada. Violações: %d\n" ANSI_COLOR_RESET, 
+        printf(ANSI_GREEN "Casa riscada. Violações: %d\n" ANSI_RESET, 
               contarTodasAsViolacoes(*linhas, *colunas));
     } else {
-        printf(ANSI_COLOR_YELLOW "Não foi possível riscar a casa!\n" ANSI_COLOR_RESET);
+        printf(ANSI_YELLOW "Não foi possível riscar a casa (já está branca ou riscada).\n" ANSI_RESET);
     }
 }
 
@@ -87,7 +80,8 @@ void processar_comando_gravar(int linhas, int colunas) {
     char nome[50];
     printf("Nome do arquivo para gravar: ");
     if (scanf("%49s", nome) != 1) {
-        printf(ANSI_COLOR_RED "Erro no nome do arquivo!\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Erro: nome do arquivo inválido!\n" ANSI_RESET);
+        while (getchar() != '\n');
         return;
     }
     gravarJogo(nome, linhas, colunas);
@@ -98,7 +92,8 @@ void processar_comando_carregar(int *linhas, int *colunas) {
     char nome[50];
     printf("Nome do arquivo para carregar: ");
     if (scanf("%49s", nome) != 1) {
-        printf(ANSI_COLOR_RED "Erro no nome do arquivo!\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Erro: nome do arquivo inválido!\n" ANSI_RESET);
+        while (getchar() != '\n');
         return;
     }
     carregarJogo(nome, linhas, colunas);
@@ -107,69 +102,69 @@ void processar_comando_carregar(int *linhas, int *colunas) {
 // Processa o comando para desfazer a última alteração
 void processar_comando_desfazer(PilhaAlteracoes *historico) {
     if (desfazer(historico)) {
-        printf(ANSI_COLOR_GREEN "Última alteração desfeita!\n" ANSI_COLOR_RESET);
+        printf(ANSI_GREEN "Última alteração desfeita!\n" ANSI_RESET);
     } else {
-        printf(ANSI_COLOR_YELLOW "Nada para desfazer!\n" ANSI_COLOR_RESET);
+        printf(ANSI_YELLOW "Nada para desfazer!\n" ANSI_RESET);
     }
 }
 
 // Processa o comando para desfazer todas as alterações
 void processar_comando_desfazer_tudo(PilhaAlteracoes *historico) {
-    desfazer_tudo(historico);
-    printf(ANSI_COLOR_GREEN "Todas as alterações desfeitas!\n" ANSI_COLOR_RESET);
+    if (desfazer_tudo(historico)) {
+        printf(ANSI_GREEN "Todas as alterações desfeitas!\n" ANSI_RESET);
+    } else {
+        printf(ANSI_YELLOW "Nada para desfazer!\n" ANSI_RESET);
+    }
 }
 
 // Processa o comando para verificar violações no tabuleiro
 void processar_comando_verificar(int linhas, int colunas) {
     int violacoes = contarTodasAsViolacoes(linhas, colunas);
     if (violacoes == 0) {
-        printf(ANSI_COLOR_GREEN "Tabuleiro válido! Sem violações.\n" ANSI_COLOR_RESET);
+        printf(ANSI_GREEN "Tabuleiro válido! Sem violações.\n" ANSI_RESET);
     } else {
-        printf(ANSI_COLOR_RED "Violações encontradas:\n" ANSI_COLOR_RESET);
+        printf(ANSI_RED "Violações encontradas:\n" ANSI_RESET);
         printf(" - Duplicados: %d\n", contarDuplicados(linhas, colunas));
         printf(" - Vizinhos inválidos: %d\n", contarVizinhos(linhas, colunas));
         printf(" - Conectividade: %d\n", contarConectividade(linhas, colunas));
-        printf(ANSI_COLOR_RED "Total de violações: %d\n" ANSI_COLOR_RESET, violacoes);
+        printf(ANSI_RED "Total de violações: %d\n" ANSI_RESET, violacoes);
     }
 }
 
 // Processa o comando para aplicar as regras de ajuda uma vez
 void processar_comando_ajuda(PilhaAlteracoes *historico, int linhas, int colunas) {
-    printf("\nAplicando regras de ajuda (uma passagem)...\n");
+    printf(ANSI_CYAN "\nAplicando regras de ajuda (uma passagem)...\n" ANSI_RESET);
     int alteracoes = aplicar_todas_regras(linhas, colunas, historico);
     if (alteracoes > 0) {
-        printf("Realizadas %d alterações:\n", alteracoes);
+        printf(ANSI_GREEN "Realizadas %d alterações.\n" ANSI_RESET, alteracoes);
         processar_comando_verificar(linhas, colunas);
     } else {
-        printf("Nenhuma alteração possível com as regras atuais.\n");
+        printf(ANSI_YELLOW "Nenhuma alteração possível com as regras atuais.\n" ANSI_RESET);
     }
 }
 
 // Processa o comando para aplicar as regras de ajuda repetidamente até não haver mais alterações
 void processar_comando_ajuda_repetida(PilhaAlteracoes *historico, int linhas, int colunas) {
-    printf("\nAplicando ajuda repetidamente...\n");
+    printf(ANSI_CYAN "\nAplicando ajuda repetidamente...\n" ANSI_RESET);
     int total = ajuda_repetida(linhas, colunas, historico);
-    printf("\nTotal de %d alterações aplicando todas as regras até esgotar:\n", total);
+    printf(ANSI_GREEN "Total de %d alterações aplicando todas as regras até esgotar.\n" ANSI_RESET, total);
     processar_comando_verificar(linhas, colunas);
 }
 
 // Processa o comando para resolver o puzzle automaticamente (apenas backtracking)
 void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colunas) {
-    printf("\nIniciando resolução...\n");
+    printf(ANSI_CYAN "\nIniciando resolução...\n" ANSI_RESET);
     PilhaAlteracoes temp_hist;
     inicializarPilha(&temp_hist);
-    int resultado = 0;
-    // Chama o resolvedor por backtracking
-    resultado = resolver_jogo_backtrack(linhas, colunas, &temp_hist);
-    // Transfere alterações para o histórico principal
+    int resultado = resolver_jogo_backtrack(linhas, colunas, &temp_hist);
     for (int i = 0; i <= temp_hist.topo; i++) {
         AlteracaoTabuleiro alt = temp_hist.alteracoes[i];
         empilhar(historico, alt.linha, alt.coluna, alt.valor_anterior, alt.valor_novo);
     }
     if (resultado) {
-        printf("Solução completa encontrada!\n");
+        printf(ANSI_GREEN "Solução completa encontrada!\n" ANSI_RESET);
     } else {
-        printf("Solução parcial encontrada. Verifique violações restantes.\n");
+        printf(ANSI_YELLOW "Solução parcial encontrada. Verifique violações restantes.\n" ANSI_RESET);
     }
     exibirTabuleiro(linhas, colunas);
     processar_comando_verificar(linhas, colunas);
@@ -178,43 +173,31 @@ void processar_comando_resolver(PilhaAlteracoes *historico, int linhas, int colu
 
 // Processa o comando para resolver o puzzle, aplicando ajudas lógicas e depois backtracking
 void processar_comando_resolver_jogo(PilhaAlteracoes *historico, int linhas, int colunas) {
-    printf("\nIniciando resolução automática...\n");
-
-    // Repõe o estado atual do tabuleiro para o original
+    printf(ANSI_CYAN "\nIniciando resolução automática...\n" ANSI_RESET);
     for (int i = 0; i < linhas; i++) {
         for (int j = 0; j < colunas; j++) {
             tabuleiro[i][j].atual = tabuleiro[i][j].original;
         }
     }
-
     PilhaAlteracoes temp_hist;
     inicializarPilha(&temp_hist);
-
-    // Aplica deduções lógicas antes do backtracking
     int total_alteracoes = ajuda_repetida(linhas, colunas, &temp_hist);
-    printf("Total de %d alterações aplicando regras até esgotar:\n", total_alteracoes);
-
-    // Depois aplica o resolvedor por backtracking para completar a solução
+    printf(ANSI_GREEN "Total de %d alterações aplicando regras até esgotar.\n" ANSI_RESET, total_alteracoes);
     int resultado = resolver_jogo_backtrack(linhas, colunas, &temp_hist);
-
-    // Transfere as alterações do histórico temporário para o principal
     for (int i = 0; i <= temp_hist.topo; i++) {
         AlteracaoTabuleiro alt = temp_hist.alteracoes[i];
         empilhar(historico, alt.linha, alt.coluna, alt.valor_anterior, alt.valor_novo);
     }
-
     if (resultado) {
-        printf("Solução completa encontrada!\n");
+        printf(ANSI_GREEN "Solução completa encontrada!\n" ANSI_RESET);
     } else {
-        printf("Solução parcial encontrada após backtracking. Verifique violações restantes.\n");
+        printf(ANSI_YELLOW "Solução parcial encontrada após backtracking. Verifique violações restantes.\n" ANSI_RESET);
     }
-
     int violacoes = contarTodasAsViolacoes(linhas, colunas);
     if (violacoes == 0) {
-        printf("Tabuleiro válido! Sem violações.\n");
+        printf(ANSI_GREEN "Tabuleiro válido! Sem violações.\n" ANSI_RESET);
     } else {
-        printf("Total de violações: %d\n", violacoes);
+        printf(ANSI_RED "Total de violações: %d\n" ANSI_RESET, violacoes);
     }
-
     liberarPilha(&temp_hist);
 }
